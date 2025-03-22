@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#1A1B1E"
+    android:layout_marginStart="40dp"
+    android:layout_marginEnd="40dp"
+    android:layout_marginTop="80dp"
+    android:layout_marginBottom="80dp"
+    android:padding="16dp">
+    <!-- Dismiss Button -->
+    <Button
+        android:id="@+id/dismiss_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dismiss"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#272932"
+        android:layout_marginTop="16dp"
+        android:padding="12dp"/>
+    <!-- Content Section -->
+     <ImageView
+        android:id="@+id/screenshot_preview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Content"
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/content_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#272932"
+        android:padding="12dp"
+        android:text="No text extracted yet."
+        android:textColor="#8F90A6"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Result Section -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Result"
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#272932"
+        android:padding="12dp">
+
+        <!-- Matched Article -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Matched Article"
+                android:textColor="#8F90A6"/>
+            <TextView
+                android:id="@+id/matched_article"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 matching article"
+                android:textColor="#8F90A6"/>
+        </LinearLayout>
+
+        <!-- Content Authenticity -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Content Authenticity"
+                android:textColor="#8F90A6"/>
+            <TextView
+                android:id="@+id/content_authenticity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Uncertain (40-79%)"
+                android:textColor="#8F90A6"/>
+        </LinearLayout>
+
+        <!-- Source Credibility -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Source Credibility"
+                android:textColor="#8F90A6"/>
+            <TextView
+                android:id="@+id/source_credibility"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#8F90A6"/>
+        </LinearLayout>
+
+        <!-- Face Detected -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Face Detected"
+                android:textColor="#8F90A6"/>
+            <TextView
+                android:id="@+id/face_detected"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Daniel Padilla"
+                android:textColor="#8F90A6"/>
+        </LinearLayout>
+
+        <!-- Credibility Score -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Credibility Score"
+                android:textColor="#8F90A6"/>
+            <TextView
+                android:id="@+id/credibility_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="80%"
+                android:textColor="#8F90A6"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    
+</LinearLayout> 

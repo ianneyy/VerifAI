@@ -1,0 +1,6 @@
+[
+  { "name": "GMA News", "domain": "gmanetwork.com", "verified": true },
+  { "name": "Rappler", "domain": "rappler.com", "verified": true },
+  { "name": "ASB-CBN News", "domain": "ABS-CBN.COM", "verified": true },
+  { "name": "Fake News XYZ", "domain": "fakenewsxyz.com", "verified": false }
+]
