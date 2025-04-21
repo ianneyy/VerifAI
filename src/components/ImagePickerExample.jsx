@@ -1,26 +1,24 @@
+/* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState, useContext } from 'react';
 import {
-  View, Text, Image, TouchableOpacity,
-  Linking, ActivityIndicator, ScrollView, StyleSheet,
+  View, Text, Image, TouchableOpacity
+  , ScrollView, StyleSheet,
   SafeAreaView, StatusBar, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { fetchRSSNews } from '../services/newsCall';
-import { uploadImage } from '../services/newsCall';
 import { ThemeContext } from '../../App';
+import InstructionModal from './InstructionModal';
+
 
 const ImagePickerExample = () => {
+   const [modalVisible, setModalVisible] = useState(true);
   const navigation = useNavigation();
   const [imageUri, setImageUri] = useState(null);
   const { theme } = useContext(ThemeContext);
-  const [news, setNews] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [cleanText, setCleanText] = useState('');
-  const [articleCount, setArticleCount] = useState(0);
-  const [sourceCredible, setsourceCredible] = useState('');
+
 
   const darkBackground = '#0f172a';
   const darkCardBackground = '#090e1a';
@@ -47,177 +45,82 @@ const ImagePickerExample = () => {
       quality: 1,
     });
 
-    if (result.didCancel || !result.assets) {return;}
+    if (result.didCancel || !result.assets) {
+      return;
+    }
 
     const uri = result.assets[0].uri;
     setImageUri(uri);
-    setNews([]);  // Reset news results
-    setsourceCredible('');
 
-    try {
-      setLoading(true);
-      const extractedText = await uploadImage(uri);
-
-      if (extractedText) {
-        console.log('🔍 Extracted Text:', extractedText);
-        searchRelatedNews(extractedText);
-      } else {
-        console.warn('⚠️ No text detected in image!');
-      }
-    } catch (error) {
-      console.error('❌ Error processing image:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Navigate to ResultScreen with the image URI
+    navigation.navigate('ResultScreen', { imageUri: uri });
   };
 
-  // Function to fetch news based on extracted text
-  const searchRelatedNews = async (query) => {
-    console.log('🔎 Searching News for:', query);
-    setLoading(true);
 
-    try {
-      const result = await fetchRSSNews(query);
-    setCleanText(result.cleanedText);
-    setNews(result.matchedArticles);
-    setArticleCount(result.matchedArticles.length);
-    setsourceCredible(result.sourceCredibility);
 
-       if (!result.matchedArticles.length) {
-        console.warn('⚠️ No matched articles found!');
-
-      }
-    } catch (error) {
-      console.error('❌ Error fetching news:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+ 
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <StatusBar barStyle={theme === 'light' ? 'dark-content' : 'light-content'} backgroundColor={backgroundColor} />
+    <SafeAreaView style={[styles.container, {backgroundColor}]}>
+      <StatusBar
+        barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        backgroundColor={backgroundColor}
+      />
 
-     <View style={[styles.header, { borderBottomColor: borderColor }]}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                        <Icon name="arrow-left" size={24} color={textColor} />
-                    </TouchableOpacity>
-                    <Text style={[styles.headerTitle, { color: textColor }]}>VerifAI Image Scan</Text>
-                    <TouchableOpacity
-                        style={styles.helpButton}
-                        onPress={() =>
-                            Alert.alert(
-                                'About VerifAI Image Scan',
-                                'The VerifAI Image Scan helps you verify information by extracting text from uploaded image providing hassle-free verification',
-                                [{ text: 'Got it' }],
-                            )
-                        }
-                    >
-                        <Icon name="help-circle" size={24} color={textColor} />
-                    </TouchableOpacity>
-                </View>
+      <View style={[styles.header, {borderBottomColor: borderColor}]}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={24} color={textColor} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, {color: textColor}]}>
+          VerifAI Image Scan
+        </Text>
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={() =>
+            Alert.alert(
+              'About VerifAI Image Scan',
+              'The VerifAI Image Scan helps you verify information by extracting text from uploaded image providing hassle-free verification',
+              [{text: 'Got it'}],
+            )
+          }>
+          <Icon name="help-circle" size={24} color={textColor} />
+        </TouchableOpacity>
+      </View>
+      <InstructionModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity
-          style={[styles.pickButton, { backgroundColor: accentColor }]}
+          style={[styles.pickButton, {backgroundColor: accentColor}]}
           onPress={pickImage}
-          activeOpacity={0.8}
-        >
+          activeOpacity={0.8}>
           <Text style={styles.pickButtonText}>Select Image</Text>
         </TouchableOpacity>
 
         {imageUri ? (
-          <View style={[styles.imageContainer, { backgroundColor: cardBackground }]}>
-            <Image source={{ uri: imageUri }} style={styles.image} />
+          <View
+            style={[styles.imageContainer, {backgroundColor: cardBackground}]}>
+            <Image source={{uri: imageUri}} style={styles.image} />
           </View>
         ) : (
-          <View style={[styles.placeholderContainer, { backgroundColor: cardBackground, borderColor }]}>
+          <View
+            style={[
+              styles.placeholderContainer,
+              {backgroundColor: cardBackground, borderColor},
+            ]}>
             <Icon name="image" size={48} color={placeholderTextColor} />
-            <Text style={[styles.placeholderText, { color: placeholderTextColor }]}>No image selected</Text>
+            <Text
+              style={[styles.placeholderText, {color: placeholderTextColor}]}>
+              No image selected
+            </Text>
           </View>
         )}
 
-        <View style={styles.textContainer}>
-          <Text style={[styles.sectionTitle, { color: textColor }]}>Content</Text>
-          <View style={[styles.recognizedTextBox, { backgroundColor: cardBackground, borderColor, marginBottom: 25  }]}>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>
-              {cleanText || 'No text extracted yet.'}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.textContainer}>
-           <Text style={[styles.sectionTitle, { color: textColor }]}>Result</Text>
-          <View style={[styles.recognizedTextBox, { backgroundColor: cardBackground, borderColor, marginBottom: 25 }]}>
-          <View style={styles.resultFlex}>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Matched Article</Text>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>
-              {articleCount || 0} matching {articleCount === 1 || articleCount === 0 ? 'article' : 'articles'}
-            </Text>
-          </View>
-           <View style={styles.resultFlex}>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Content Authenticity</Text>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Uncertain</Text>
-          </View>
-           <View style={styles.resultFlex}>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Source Credibility</Text>
-            <Text style={[styles.recognizedText, { color: sourceCredible === 'Credible' ? '#36AE7C' : '#EB5353'  }]}>
-               {sourceCredible || ''}
-            </Text>
-          </View>
-           <View style={styles.resultFlex}>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Face Detected</Text>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Daniel Padilla</Text>
-          </View>
-           <View style={styles.resultFlex}>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>Credibility Score</Text>
-            <Text style={[styles.recognizedText, { color: recognizedTextColor }]}>80%</Text>
-          </View>
-          </View>
-        </View>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={accentColor} />
-            <Text style={[styles.loadingText, { color: subtitleColor }]}>Processing...</Text>
-          </View>
-        ) : news.length > 0 ? (
-          <View style={styles.newsContainer}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>Related News</Text>
-            {news.map((item, index) => (
-              <TouchableOpacity
-                key={index.toString()}
-                style={[styles.newsCard, { backgroundColor: cardBackground }]}
-                onPress={() => Linking.openURL(item.link)}
-                activeOpacity={0.7}
-              >
-                {item.thumbnail ? (
-                  <Image source={{ uri: item.thumbnail }} style={styles.newsImage} />
-                ) : (
-                  <View
-                    style={[
-                      styles.newsImagePlaceholder,
-                      { backgroundColor: theme === 'light' ? '#f1f5f9' : '#2A2A2A' },
-                    ]}
-                  >
-                    <Text style={[styles.newsImagePlaceholderText, { color: placeholderTextColor }]}>No Image</Text>
-                  </View>
-                )}
-                <View style={styles.newsContent}>
-                  <Text style={[styles.newsTitle, { color: textColor }]} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={[styles.newsSource, { color: accentColor }]}>Source: {item.source}</Text>
-                  <Text style={[styles.newsSnippet, { color: subtitleColor }]} numberOfLines={3}>
-                    {item.snippet}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ) : cleanText ? (
-          <View style={styles.emptyNewsContainer}>
-            <Text style={[styles.emptyNewsText, { color: placeholderTextColor }]}>No related news found</Text>
-          </View>
-        ) : null}
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -227,30 +130,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  newsContent:{
-    padding: 15,
-  },
-  resultFlex:{
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 25,
-  },
-  newsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 6,
-  },
-  newsSource:{
-    fontSize:12,
-    color : '#6C63FF',
-    marginBottom:8,
-  },
-  newsSnippet:{
-    fontSize:14,
-    color:'#AAAAAA',
-    lineHeight:20,
-  },
+ 
+
+  
+  
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -345,18 +228,8 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
   },
-  newsContainer: {
-    marginHorizontal: 20,
-    marginTop: 30,
-  },
-  emptyNewsContainer: {
-    marginTop: 30,
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyNewsText: {
-    fontSize: 16,
-  },
+  
+  
 });
 
 export default ImagePickerExample;

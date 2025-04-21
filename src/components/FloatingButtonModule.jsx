@@ -5,5 +5,5 @@ const { FloatingButtonServiceModule } = NativeModules;
 export default {
   showBubble: () => FloatingButtonServiceModule.showBubble(),
   hideBubble: () => FloatingButtonServiceModule.hideBubble(),
-  isFloatingButtonVisible: () => FloatingButtonServiceModule.isFloatingButtonVisible()
+  isFloatingButtonVisible: () => FloatingButtonServiceModule.isFloatingButtonVisible(),
 };

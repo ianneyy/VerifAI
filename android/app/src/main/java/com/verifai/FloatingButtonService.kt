@@ -40,6 +40,13 @@ import android.content.ContentValues
 import android.provider.MediaStore
 import android.widget.TextView
 import android.widget.Button
+import java.net.HttpURLConnection
+import java.io.ByteArrayOutputStream
+import java.net.URL
+import android.widget.LinearLayout
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.content.res.ColorStateList
 
 class FloatingButtonService : Service() {
     companion object {
@@ -60,8 +67,9 @@ class FloatingButtonService : Service() {
     private var virtualDisplay: VirtualDisplay? = null
     private var imageReader: ImageReader? = null
     private var isButtonVisible = false
+    private var popupView: View? = null  // Add this line to store the popup view
 
-    override fun onCreate() {
+     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "Service created")
 
@@ -72,7 +80,7 @@ class FloatingButtonService : Service() {
         
         // Initialize window manager and add floating button
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        addFloatingButton()
+            addFloatingButton()
     }
   
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -86,7 +94,7 @@ class FloatingButtonService : Service() {
                 } else {
                     Log.e(TAG, "Floating button not initialized")
                     addFloatingButton()
-                    showFloatingButton()
+                showFloatingButton()
                 }
             }
             "HIDE_BUTTON" -> {
@@ -311,10 +319,10 @@ class FloatingButtonService : Service() {
 
     private fun cleanupScreenCapture() {
         try {
-            virtualDisplay?.release()
-            virtualDisplay = null
-            imageReader?.close()
-            imageReader = null
+        virtualDisplay?.release()
+        virtualDisplay = null
+        imageReader?.close()
+        imageReader = null
         } catch (e: Exception) {
             Log.e(TAG, "Error during cleanup", e)
         }
@@ -325,48 +333,51 @@ class FloatingButtonService : Service() {
         var croppedBitmap: Bitmap? = null
         
         try {
-            val planes = image.planes
-            val buffer = planes[0].buffer
-            val pixelStride = planes[0].pixelStride
-            val rowStride = planes[0].rowStride
-            val rowPadding = rowStride - pixelStride * image.width
-            val bitmapWidth = image.width + rowPadding / pixelStride
+        val planes = image.planes
+        val buffer = planes[0].buffer
+        val pixelStride = planes[0].pixelStride
+        val rowStride = planes[0].rowStride
+        val rowPadding = rowStride - pixelStride * image.width
+        val bitmapWidth = image.width + rowPadding / pixelStride
 
             bitmap = Bitmap.createBitmap(bitmapWidth, image.height, Bitmap.Config.ARGB_8888)
-            bitmap.copyPixelsFromBuffer(buffer)
+        bitmap.copyPixelsFromBuffer(buffer)
 
-            // Crop the extra width
+        // Crop the extra width
             croppedBitmap = Bitmap.createBitmap(bitmap, 0, 0, image.width, image.height)
-
+        
             // Show preview popup
-            showScreenshotPreview(croppedBitmap)
+        showScreenshotPreview(croppedBitmap)
 
-            val fileName = "Screenshot_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.png"
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Save using MediaStore for Android 10+
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-                    put(MediaStore.Images.Media.RELATIVE_PATH, "DCIM/Screenshots")
+            // Send image to Python server
+            sendImageToServer(croppedBitmap)
+
+        val fileName = "Screenshot_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.png"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Save using MediaStore for Android 10+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "DCIM/Screenshots")
+            }
+
+            val resolver = contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                resolver.openOutputStream(it)?.use { outputStream ->
+                    croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                    outputStream.flush()
                 }
+                Log.d(TAG, "Screenshot saved to DCIM/Screenshots")
+            } ?: Log.e(TAG, "Failed to save screenshot")
 
-                val resolver = contentResolver
-                val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        } else {
+            // Save to DCIM/Screenshots for older versions
+            val screenshotsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Screenshots")
+            if (!screenshotsDir.exists()) screenshotsDir.mkdirs()
 
-                uri?.let {
-                    resolver.openOutputStream(it)?.use { outputStream ->
-                        croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                        outputStream.flush()
-                    }
-                    Log.d(TAG, "Screenshot saved to DCIM/Screenshots")
-                } ?: Log.e(TAG, "Failed to save screenshot")
-
-            } else {
-                // Save to DCIM/Screenshots for older versions
-                val screenshotsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Screenshots")
-                if (!screenshotsDir.exists()) screenshotsDir.mkdirs()
-
-                val file = File(screenshotsDir, fileName)
+            val file = File(screenshotsDir, fileName)
                 FileOutputStream(file).use { fos ->
                     croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
                     fos.flush()
@@ -387,57 +398,105 @@ class FloatingButtonService : Service() {
 
     private fun showScreenshotPreview(bitmap: Bitmap) {
         try {
-            val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as android.view.LayoutInflater
-            val view = inflater.inflate(R.layout.screenshot_popup, null)
+        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as android.view.LayoutInflater
+            popupView = inflater.inflate(R.layout.screenshot_popup, null)  // Store the view
 
-            // Set up the preview image
-            val imageView = view.findViewById<ImageView>(R.id.screenshot_preview)
-            imageView.setImageBitmap(bitmap)
+        // Set up the preview image
+            val imageView = popupView?.findViewById<ImageView>(R.id.screenshot_preview)
+            imageView?.setImageBitmap(bitmap)
 
-            // Set up the content text
-            val contentText = view.findViewById<TextView>(R.id.content_text)
-            contentText.text = "No text extracted yet."
+            // Set up loading state
+            val loadingContainer = popupView?.findViewById<LinearLayout>(R.id.loading_container)
+            val contentContainer = popupView?.findViewById<LinearLayout>(R.id.content_container)
+            val extractedText = popupView?.findViewById<LinearLayout>(R.id.extracted_text)
+            
+            val btnResults = popupView?.findViewById<Button>(R.id.btn_results_overview)
+            val btnNews = popupView?.findViewById<Button>(R.id.btn_related_news)
+            val layoutResults = popupView?.findViewById<LinearLayout>(R.id.layoutResults)
+            val layoutNews = popupView?.findViewById<LinearLayout>(R.id.layoutNews)
 
-            // Set up result fields with default values
-            view.findViewById<TextView>(R.id.matched_article).text = "0 matching article"
-            view.findViewById<TextView>(R.id.content_authenticity).text = "Uncertain (40-79%)"
-            view.findViewById<TextView>(R.id.source_credibility).text = ""
-            view.findViewById<TextView>(R.id.face_detected).text = "Daniel Padilla"
-            view.findViewById<TextView>(R.id.credibility_score).text = "80%"
+                                    // Set initial states
+            layoutResults?.visibility = View.VISIBLE
+            layoutNews?.visibility = View.GONE
+            btnResults?.setTextColor(Color.parseColor("#FFFFFF"))
+            btnResults?.setBackgroundColor(Color.parseColor("#2979FF"))
+            btnNews?.setTextColor(Color.parseColor("#2979FF"))
+            btnNews?.setBackgroundColor(Color.parseColor("#1e293b"))
 
-            val displayMetrics = resources.displayMetrics
-            val width = (displayMetrics.widthPixels * 0.9).toInt() // Use 90% of screen width
-            val height = (displayMetrics.heightPixels * 0.8).toInt() // Use 80% of screen height
+            // Set up click listeners
+            btnResults?.setOnClickListener {
+                layoutResults?.visibility = View.VISIBLE
+                layoutNews?.visibility = View.GONE
+                                            
+                btnResults?.setTextColor(Color.parseColor("#FFFFFF"))
+                btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#2979FF"))
 
-            val params = WindowManager.LayoutParams(
+
+                btnNews?.setTextColor(Color.parseColor("#2979FF"))
+                btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1e293b"))
+
+            }
+
+            btnNews?.setOnClickListener {
+                layoutNews?.visibility = View.VISIBLE
+                layoutResults?.visibility = View.GONE
+
+                btnNews?.setTextColor(Color.parseColor("#FFFFFF"))
+                btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#2979FF"))
+
+                                            
+                btnResults?.setTextColor(Color.parseColor("#2979FF"))
+                btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1e293b"))
+             }
+            // Show loading, hide content initially
+            loadingContainer?.visibility = View.VISIBLE
+            contentContainer?.visibility = View.GONE
+            extractedText?.visibility = View.GONE
+
+        // Set up the content text
+            val contentText = popupView?.findViewById<TextView>(R.id.content_text)
+            contentText?.text = "No text extracted yet."
+
+        // Set up result fields with default values
+            popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+25"
+            popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "+25"
+            popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+25"
+            popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+25"
+
+        val displayMetrics = resources.displayMetrics
+            val width = (displayMetrics.widthPixels * 0.9).toInt()
+            val height = (displayMetrics.heightPixels * 0.8).toInt()
+
+        val params = WindowManager.LayoutParams(
                 width,
                 height,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else
-                    WindowManager.LayoutParams.TYPE_PHONE,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT
-            )
-            params.gravity = Gravity.CENTER
-
+            PixelFormat.TRANSLUCENT
+        )
+        params.gravity = Gravity.CENTER
+        
             // Remove any existing preview if it exists
             try {
-                windowManager.removeView(view)
+                windowManager.removeView(popupView)
             } catch (e: Exception) {
                 // Ignore if no view exists
             }
 
             // Add the new preview
-            windowManager.addView(view, params)
+            windowManager.addView(popupView, params)
             Log.d(TAG, "Screenshot preview added successfully")
-
+            
             // Set up dismiss button click listener
-            view.findViewById<Button>(R.id.dismiss_button).setOnClickListener {
+            popupView?.findViewById<Button>(R.id.dismiss_button)?.setOnClickListener {
                 try {
-                    windowManager.removeView(view)
+                    windowManager.removeView(popupView)
+                    popupView = null
                     Log.d(TAG, "Screenshot preview dismissed")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error removing preview", e)
@@ -447,6 +506,332 @@ class FloatingButtonService : Service() {
             Log.e(TAG, "Error showing screenshot preview", e)
             Toast.makeText(this, "Failed to show preview", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showLoadingState(isLoading: Boolean) {
+        Handler(Looper.getMainLooper()).post {
+            try {
+                if (popupView != null) {
+                    val loadingContainer = popupView?.findViewById<LinearLayout>(R.id.loading_container)
+                    val contentContainer = popupView?.findViewById<LinearLayout>(R.id.content_container)
+                    val extractedText = popupView?.findViewById<LinearLayout>(R.id.extracted_text)
+                    
+                    if (isLoading) {
+                        loadingContainer?.visibility = View.VISIBLE
+                        contentContainer?.visibility = View.GONE
+                        extractedText?.visibility = View.GONE
+                    } else {
+                        loadingContainer?.visibility = View.GONE
+                        contentContainer?.visibility = View.VISIBLE
+                        extractedText?.visibility = View.VISIBLE
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating loading state", e)
+            }
+        }
+    }
+
+    private fun sendImageToServer(bitmap: Bitmap) {
+        Thread {
+            try {
+                // Show loading state
+                showLoadingState(true)
+
+                // Send image to /news endpoint
+                val url = URL("http://10.0.2.2:5001/news")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.doOutput = true
+
+                // Generate a unique boundary
+                val boundary = "*****" + System.currentTimeMillis() + "*****"
+                connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+
+                // Convert bitmap to byte array
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                val imageBytes = outputStream.toByteArray()
+
+                // Write the multipart form data
+                connection.outputStream.use { os ->
+                    os.write("--$boundary\r\n".toByteArray())
+                    os.write("Content-Disposition: form-data; name=\"image\"; filename=\"screenshot.png\"\r\n".toByteArray())
+                    os.write("Content-Type: image/png\r\n\r\n".toByteArray())
+                    os.write(imageBytes)
+                    os.write("\r\n".toByteArray())
+                    os.write("--$boundary--\r\n".toByteArray())
+                }
+
+                // Get the response code
+                val responseCode = connection.responseCode
+                Log.d(TAG, "News endpoint response code: $responseCode")
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    Log.d(TAG, "News endpoint response: $response")
+
+                    try {
+                        // Parse the JSON response
+                        val jsonResponse = org.json.JSONObject(response)
+                        
+                        // Get the cleaned text and update the content text in the popup
+                        val cleanedText = jsonResponse.getString("cleaned_text")
+                        val sourceName = jsonResponse.getString("source_name")
+                        val score = jsonResponse.getInt("score")
+
+
+                        val sourceCredibility = jsonResponse.getString("source_credibility")
+                        val sourceCredibilityScore = if (sourceCredibility == "Credible") "+25" else "0"
+                        val sourceCredibilityIssueModal = if (sourceCredibility == "Credible") "" else "Click to see possible issues"
+
+                        val matchedArticles = jsonResponse.getJSONArray("matched_articles")
+                        val matchedArticlesCount = matchedArticles.length()
+                        val matchedArticlesCountScore = if (matchedArticlesCount >= 1) "+25" else "0"
+                        val matchedArticlesCountIssueModal = if (matchedArticlesCount >= 1) "" else "Click to see possible issues"
+
+                        val matchedPerson = jsonResponse.getBoolean("match_person")
+                        val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
+                        Log.d(TAG, "matchedPerson: $matchedPerson, faceRecognition: $faceRecognition")
+
+                        val matchedPersonScore = if (matchedPerson || faceRecognition == "No face detected") "+25" else "0"
+                        val matchedPersonIssueModal = if (matchedPerson || faceRecognition == "No face detected") "" else "Click to see possible issues"
+
+                        
+                        val prediction = jsonResponse.getString("prediction")
+                        val predictionScore = if (prediction == "Credible") "+25" else "0"
+                        val predictionIssueModal = if (prediction == "Credible") "" else "Click to see possible issues"
+
+
+                        // val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
+                       
+                       val label = when {
+                            score == 100 -> "Real"
+                            score >= 70 -> "Likely Real"
+                            score >= 50 -> "Suspicious"
+                            score >= 25 -> "Likely False"
+                            else -> "Fake"
+                        }
+                        val colorLabel = when {
+                            score == 100 -> "#4CD964"
+                            score >= 70 -> "#FFCC00"
+                            score >= 50 -> "#FF9500"
+                            score >= 25 -> "#FF3B30"
+                            else -> "#8E8E93"
+                        }
+                        // Update UI on the main thread
+                        Handler(Looper.getMainLooper()).post {
+                            try {
+                                if (popupView != null) {
+                                  
+                                    // Get the DonutProgress view from popup
+                                    val donutProgress = popupView?.findViewById<com.github.lzyzsd.circleprogress.DonutProgress>(R.id.donut_progress)
+
+                                    val donutProgressPercent = popupView?.findViewById<TextView>(R.id.progress_percent)
+                                    val donutProgressLabel = popupView?.findViewById<TextView>(R.id.progress_label)
+                                    
+                                    donutProgressPercent?.setTextColor(Color.parseColor(colorLabel))
+                                    donutProgressLabel?.setTextColor(Color.parseColor(colorLabel))
+
+
+                                    // Update gauge if available
+
+                                    donutProgressPercent?.text = "$score%"
+                                    donutProgressLabel?.text = label
+                                    
+                                    donutProgress?.apply {
+                                        progress = score.toFloat()
+                                        finishedStrokeColor = Color.parseColor(colorLabel)
+
+                                    }
+
+                                    // sourceCredibilityScore
+                                    popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = sourceCredibilityScore
+                                    val scText = popupView?.findViewById<TextView>(R.id.source_credibility_score)
+                                    val scColor = if (sourceCredibilityScore == "+25") "#9DFFBA" else "#FF797B"
+                                    scText?.setTextColor(Color.parseColor(scColor))
+                                    val sourceCredibilityIssueText = popupView?.findViewById<TextView>(R.id.source_credibility_modal_issue)
+                                    sourceCredibilityIssueText?.text = sourceCredibilityIssueModal
+                                    sourceCredibilityIssueText?.visibility = if (sourceCredibilityIssueModal.isEmpty()) View.GONE else View.VISIBLE
+                                    val scBorderColor = popupView?.findViewById<View>(R.id.source_credibility_border_color)
+                                    scBorderColor?.setBackgroundColor(Color.parseColor(scColor))
+
+
+
+                                      // predictionScore
+                                    popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = predictionScore
+                                    val pText = popupView?.findViewById<TextView>(R.id.content_authenticity_score)
+                                    val pColor = if (predictionScore == "+25") "#9DFFBA" else "#FF797B"
+                                    pText?.setTextColor(Color.parseColor(pColor))
+                                    val predictionIssueText = popupView?.findViewById<TextView>(R.id.content_authenticity_modal_issue)
+                                    predictionIssueText?.text = predictionIssueModal
+                                    predictionIssueText?.visibility = if (predictionIssueModal.isEmpty()) View.GONE else View.VISIBLE
+                                    val pBorderColor = popupView?.findViewById<View>(R.id.content_authenticity_border_color)
+                                    pBorderColor?.setBackgroundColor(Color.parseColor(pColor))
+
+                                      // matchedArticlesCountScore
+                                    popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = matchedArticlesCountScore
+                                    val maText = popupView?.findViewById<TextView>(R.id.matched_article_score)
+                                    val maColor = if (matchedArticlesCountScore == "+25") "#9DFFBA" else "#FF797B"
+                                    maText?.setTextColor(Color.parseColor(maColor))
+                                    val matchedArticlesCountIssueText = popupView?.findViewById<TextView>(R.id.matched_article_modal_issue)
+                                    matchedArticlesCountIssueText?.text = matchedArticlesCountIssueModal
+                                    matchedArticlesCountIssueText?.visibility = if (matchedArticlesCountIssueModal.isEmpty()) View.GONE else View.VISIBLE
+                                    val maBorderColor = popupView?.findViewById<View>(R.id.matched_article_border_color)
+                                    maBorderColor?.setBackgroundColor(Color.parseColor(maColor))
+                                    
+                                      // matchedPersonScore
+                                    popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = matchedPersonScore
+                                    val mpText = popupView?.findViewById<TextView>(R.id.face_context_matching_score)
+                                    val mpColor = if (matchedPersonScore == "+25") "#9DFFBA" else "#FF797B"
+                                    mpText?.setTextColor(Color.parseColor(mpColor))
+                                     val matchedPersonIssueText = popupView?.findViewById<TextView>(R.id.face_context_matching_modal_issue)
+                                    matchedPersonIssueText?.text = matchedPersonIssueModal
+                                    matchedPersonIssueText?.visibility = if (matchedPersonIssueModal.isEmpty()) View.GONE else View.VISIBLE
+                                    val mpBorderColor = popupView?.findViewById<View>(R.id.face_context_matching_border_color)
+                                    mpBorderColor?.setBackgroundColor(Color.parseColor(mpColor))
+
+
+
+                                    // // Update the content text
+                                    popupView?.findViewById<TextView>(R.id.content_text)?.text = cleanedText
+                                    popupView?.findViewById<TextView>(R.id.content_source)?.text = "Source: $sourceName"
+                                    
+                                    // // Update face recognition
+                                    // popupView?.findViewById<TextView>(R.id.face_detected)?.text = faceRecognition
+                                    
+                                    // // Update source credibility
+                                    // popupView?.findViewById<TextView>(R.id.source_credibility)?.apply {
+                                    //     text = sourceCredibility
+                                    //     val color = if (text.equals("Credible")) {
+                                    //         android.graphics.Color.parseColor("#36AE7C")
+                                    //     } else {
+                                    //         android.graphics.Color.parseColor("#EB5353")
+                                    //     }
+                                    //     setTextColor(color)
+                                    // }
+                                    
+                                    // // Update matched articles count
+                                    // popupView?.findViewById<TextView>(R.id.matched_article)?.text = "${matchedArticles.length()} matching article(s)"
+                                    
+                                    // // Update content authenticity
+                                    // popupView?.findViewById<TextView>(R.id.content_authenticity)?.text = "Authentic (80-100%)"
+                                    
+                                    // Get the container for articles
+                                    val articlesContainer = popupView?.findViewById<LinearLayout>(R.id.articles_container)
+                                    articlesContainer?.removeAllViews() // Clear existing articles
+
+                                    // Check if there are no matched articles
+                                    if (matchedArticles.length() == 0) {
+                                        // Create a TextView for "No related news"
+                                        val noRelatedNewsText = TextView(this).apply {
+                                            text = "No related news"
+                                            setTextColor(Color.parseColor("#FF0000")) // Optional: Change color if desired
+                                            textSize = 16f
+                                            layoutParams = LinearLayout.LayoutParams(
+                                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                            ).apply {
+                                                topMargin = 16
+                                            }
+                                            gravity = Gravity.CENTER // Center the text in the container
+                                        }
+                                        // Add the "No related news" message to the container
+                                        articlesContainer?.addView(noRelatedNewsText)
+                                    } else {
+                                        // Add each article to the container
+                                        for (i in 0 until matchedArticles.length()) {
+                                            val article = matchedArticles.getJSONObject(i)
+                                            val title = article.getString("title")
+                                            val source = article.getString("source")
+                                            val snippet = article.getString("snippet")
+                                            
+                                            // Create article layout
+                                            val articleLayout = LinearLayout(this).apply {
+                                                layoutParams = LinearLayout.LayoutParams(
+                                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                                ).apply {
+                                                    bottomMargin = 16
+                                                }
+                                                setBackgroundColor(Color.parseColor("#1e293b"))
+                                                orientation = LinearLayout.VERTICAL
+                                                setPadding(12, 12, 12, 12)
+                                            }
+                                            
+                                            // Add title
+                                            articleLayout.addView(TextView(this).apply {
+                                                text = title
+                                                setTextColor(Color.parseColor("#f8fafc"))
+                                                textSize = 16f
+                                                layoutParams = LinearLayout.LayoutParams(
+                                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                                )
+                                            })
+                                            
+                                            // Add source
+                                            articleLayout.addView(TextView(this).apply {
+                                                text = "Source: $source"
+                                                setTextColor(Color.parseColor("#6C63FF"))
+                                                textSize = 12f
+                                                layoutParams = LinearLayout.LayoutParams(
+                                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                                ).apply {
+                                                    topMargin = 4
+                                                }
+                                            })
+                                            
+                                            // Add snippet
+                                            articleLayout.addView(TextView(this).apply {
+                                                text = snippet
+                                                setTextColor(Color.parseColor("#AAAAAA"))
+                                                textSize = 14f
+                                                layoutParams = LinearLayout.LayoutParams(
+                                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                                ).apply {
+                                                    topMargin = 4
+                                                }
+                                            })
+                                            
+                                            // Add the article layout to the container
+                                            articlesContainer?.addView(articleLayout)
+                                        }
+                                    }
+
+                                    
+                                    Log.d(TAG, "Updated TextViews with JSON response")
+                                    
+                                    // Hide loading state after all updates are done
+                                    showLoadingState(false)
+                                } else {
+                                    Log.e(TAG, "Popup view is null")
+                                    showLoadingState(false)
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error updating TextViews", e)
+                                showLoadingState(false)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error parsing JSON response", e)
+                        showLoadingState(false)
+                    }
+                } else {
+                    val errorStream = connection.errorStream
+                    if (errorStream != null) {
+                        val errorMessage = errorStream.bufferedReader().use { it.readText() }
+                        Log.e(TAG, "News endpoint error response: $errorMessage")
+                    }
+                    showLoadingState(false)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in server communication", e)
+                showLoadingState(false)
+            }
+        }.start()
     }
 
     private fun restoreMediaProjection() {

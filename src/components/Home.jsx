@@ -96,7 +96,7 @@ const HomeScreen = () => {
 
             <MenuItem
               icon="file-text"
-              title="Paste Text"
+              title="Text Verification"
               description="Verify in text content"
               onPress={() => navigation.navigate('Text')}
             />
@@ -105,7 +105,7 @@ const HomeScreen = () => {
               icon="clock"
               title="History"
               description="View your past verifications"
-              onPress={() => navigation.navigate('History')}
+              onPress={() => navigation.navigate('Result')}
             />
 
 
