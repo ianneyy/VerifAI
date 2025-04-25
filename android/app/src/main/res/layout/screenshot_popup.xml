@@ -132,17 +132,19 @@
                     android:layout_height="200dp"
                     android:layout_gravity="center">
 
-                    <com.github.lzyzsd.circleprogress.DonutProgress
-                        android:id="@+id/donut_progress"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:donut_finished_stroke_width="15dp"
-                        app:donut_unfinished_stroke_width="15dp"
-                        app:donut_finished_color="#FF6200EE"
-                        app:donut_max="100"
-                        app:donut_progress="75"
-                        app:donut_show_text="false"
-                        app:donut_unfinished_color="#E0E0E0" />
+                   <com.github.lzyzsd.circleprogress.DonutProgress
+                       android:id="@+id/donut_progress"
+                       android:layout_width="match_parent"
+                       android:layout_height="match_parent"
+                       android:rotation="270"
+                       android:scaleY="-1"
+                       app:donut_finished_color="#FF6200EE"
+                       app:donut_finished_stroke_width="15dp"
+                       app:donut_max="100"
+                       app:donut_progress="75"
+                       app:donut_show_text="false"
+                       app:donut_unfinished_color="#E0E0E0"
+                       app:donut_unfinished_stroke_width="15dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -169,6 +171,16 @@
                     </LinearLayout>
 
                 </FrameLayout>
+                    <TextView
+                        android:id="@+id/description"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        
+                        android:text="Content is factual, informative"
+                        android:textSize="16sp"
+                        android:textColor="#8F90A6"
+                        android:gravity="center"/>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

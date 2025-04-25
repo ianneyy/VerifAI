@@ -10,30 +10,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-const ExtractedText = ({
+const ClaimText = ({
   cleanText,
-  SourceName,
   textColor,
-  recognizedTextColor,
 }) => {
   return (
     <View style={styles.textContainer}>
       <Text style={[styles.sectionTitle, {color: textColor}]}>
         {cleanText || 'No text extracted yet.'}
       </Text>
-      
-      <Text
-        style={[
-          styles.recognizedText,
-          {color: recognizedTextColor, fontStyle: 'italic'},
-        ]}>
-        Source: {SourceName || 'No Source Name.'}
-      </Text>
     </View>
 
   );
 };
-export default ExtractedText;
+export default ClaimText;
 
 const styles = StyleSheet.create({
   textContainer: {

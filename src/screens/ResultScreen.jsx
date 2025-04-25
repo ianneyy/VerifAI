@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable eol-last */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
 import { uploadImage } from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import SQLite from 'react-native-sqlite-storage';
 
 import {
   View,
@@ -27,12 +29,20 @@ import IssueModal from '../components/IssueModal';
 import ExtractedText from '../components/ExtractedText';
 import ResultsOverview from '../components/ResultsOverview';
 import Loading from '../components/Loading';
-
+import ImageUploadHelp from '../components/ImageUploadHelp';
+import {
+  initDB,
+  insertFactCheck,
+  insertRelatedNews,
+  getAllFactChecks,
+  getRelatedNews,
+} from '../js/database';
 
 
 const ResultScreen = () => {
   const route = useRoute();
   const { imageUri } = route.params;
+const [factChecks, setFactChecks] = useState([]);
   const [modalVisible, setModalVisible] = useState(true);
   const navigation = useNavigation();
   const { theme } = useContext(ThemeContext);
@@ -42,6 +52,8 @@ const ResultScreen = () => {
   const [resultLoading, setResultLoading] = useState(false);
   const [cleanText, setCleanText] = useState('');
   const [articleCount, setArticleCount] = useState(0);
+  const [sourceScore, setSourceScore] = useState(0);
+  const [matchedArticleScore, setMatchedArticleScore] = useState(0);
   const [matchedPerson, setMatchedPerson] = useState(null);
   const [sourceCredible, setsourceCredible] = useState('');
   const [prediction, setPrediction] = useState('');
@@ -54,6 +66,8 @@ const ResultScreen = () => {
   const [issueModalMessage, setIssueModalMessage] = useState('');
   const [issueModalReason1, setIssueModalReason1] = useState('');
   const [issueModalReason2, setIssueModalReason2] = useState('');
+  const [isHelpVisible, setHelpVisible] = useState(false);
+
 
   const darkBackground = '#0f172a';
   const darkCardBackground = '#090e1a';
@@ -78,9 +92,10 @@ const ResultScreen = () => {
         if (!imageUri) {
           return;
         }
+        // await initDB();
+
         setLoading(true);
         const extractedData = await uploadImage(imageUri);
-
         if (extractedData) {
           setContentLoading(false);
           if (extractedData.extracted_text) {
@@ -88,11 +103,30 @@ const ResultScreen = () => {
             setfaceRecognition(extractedData.face_recognition.artist);
             setCleanText(extractedData.cleanedText);
             setArticleCount(extractedData.matchedArticles.length);
-            setsourceCredible(extractedData.sourceCredibility);
+            // setsourceCredible(extractedData.sourceCredibility);
             setPrediction(extractedData.prediction);
             setGauge(extractedData.score);
             setSourceName(extractedData.sourceName);
+            setSourceScore(extractedData.sourceScore);
             setMatchedPerson(extractedData.matchedPerson);
+            setMatchedArticleScore(extractedData.matchedArticleScore);
+
+            const factCheckData = {
+              claim: extractedData.cleanedText,
+              source: extractedData.sourceName,
+              verdict: extractedData.score,
+              source_score: extractedData.sourceScore,
+              writing_style: extractedData.prediction,
+              matched_article: extractedData.matchedArticleScore,
+              matched_person: extractedData.matchedPerson,
+              face_recognition: extractedData.face_recognition.artist,
+            };
+
+            console.log('📝 Inserting fact check:', factCheckData);
+            await insertFactCheck(factCheckData);
+            console.log('✅ Fact check inserted.');
+
+
             if (!extractedData.matchedArticles.length) {
               console.warn('⚠️ No matched articles found!');
             }
@@ -115,6 +149,10 @@ const ResultScreen = () => {
   }, [imageUri]);
 
 
+
+
+
+
     return (
       <SafeAreaView style={[styles.container, {backgroundColor}]}>
         <StatusBar
@@ -128,22 +166,17 @@ const ResultScreen = () => {
             onPress={() => navigation.goBack()}>
             <Icon name="arrow-left" size={24} color={textColor} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, {color: textColor}]}>
-            Result
-          </Text>
+          <Text style={[styles.headerTitle, {color: textColor}]}>Result</Text>
           <TouchableOpacity
             style={styles.helpButton}
-            onPress={() =>
-              Alert.alert(
-                'Result',
-                'The VerifAI Image Scan helps you verify information by extracting text from uploaded image providing hassle-free verification',
-                [{text: 'Got it'}],
-              )
-            }>
+            onPress={() => setHelpVisible(true)}>
             <Icon name="help-circle" size={24} color={textColor} />
           </TouchableOpacity>
         </View>
-
+        <ImageUploadHelp
+          visible={isHelpVisible}
+          onClose={() => setHelpVisible(false)}
+        />
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {loading ? (
             <View style={{marginTop: 30}}>
@@ -165,17 +198,18 @@ const ResultScreen = () => {
 
               {/* GAUGE */}
               <View style={styles.textContainer}>
-                <Gauge confidence={gauge} />
+                <Gauge confidence={gauge} textColor={recognizedTextColor} />
               </View>
 
               {/* PANEL RESULT OVERVIEW AND RELATED NEWS */}
               <ResultsOverview
                 activeContent={activeContent}
                 setActiveContent={setActiveContent}
-                sourceCredible={sourceCredible}
+                sourceScore={sourceScore}
                 prediction={prediction}
                 articleCount={articleCount}
                 matchedPerson={matchedPerson}
+                matchedArticleScore={matchedArticleScore}
                 faceRecognition={faceRecognition}
                 loading={loading}
                 accentColor={accentColor}

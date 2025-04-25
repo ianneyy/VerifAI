@@ -53,11 +53,15 @@ const HomeScreen = () => {
   const { theme } = useContext(ThemeContext);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme === 'light' ? '#f8fafc' : '#0f172a' }]}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {backgroundColor: theme === 'light' ? '#f8fafc' : '#0f172a'},
+      ]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: '#1e3a8a' }]}>VerifAI</Text>
+            <Text style={[styles.title, {color: '#1e3a8a'}]}>VerifAI</Text>
             <ModeToggle />
           </View>
 
@@ -65,10 +69,18 @@ const HomeScreen = () => {
             <View style={styles.iconCircle}>
               <Icon name="check-circle" size={48} color="#1e3a8a" />
             </View>
-            <Text style={[styles.heroTitle, { color: theme === 'light' ? '#0f172a' : '#f8fafc' }]}>
+            <Text
+              style={[
+                styles.heroTitle,
+                {color: theme === 'light' ? '#0f172a' : '#f8fafc'},
+              ]}>
               Verify Information
             </Text>
-            <Text style={[styles.heroDescription, { color: theme === 'light' ? '#64748b' : '#94a3b8' }]}>
+            <Text
+              style={[
+                styles.heroDescription,
+                {color: theme === 'light' ? '#64748b' : '#94a3b8'},
+              ]}>
               Verify the content from various sources
             </Text>
           </View>
@@ -105,10 +117,8 @@ const HomeScreen = () => {
               icon="clock"
               title="History"
               description="View your past verifications"
-              onPress={() => navigation.navigate('Result')}
+              onPress={() => navigation.navigate('History')}
             />
-
-
           </View>
         </View>
       </ScrollView>

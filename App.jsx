@@ -15,13 +15,13 @@ import Gauge from './src/components/Gauge';
 import AssistantScreen from './src/components/AssistantScreen';
 import TextScreen from './src/components/TextScreen';
 import ResultScreen from './src/screens/ResultScreen';
+import History from './src/screens/History';
 import { useColorScheme } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 
 const UrlScreen = () => null;
-const HistoryScreen = () => null;
 // const ResultScreen = () => null;
 export const ThemeContext = createContext({
   theme: 'light',
@@ -56,6 +56,7 @@ function App() {
           <Stack.Screen name="Text" component={TextScreen} />
           <Stack.Screen name="Gauge" component={ResultScreen} />
           <Stack.Screen name="ResultScreen" component={ResultScreen} />
+          <Stack.Screen name="History" component={History} />
         </Stack.Navigator>
       </NavigationContainer>
     </ThemeProvider>

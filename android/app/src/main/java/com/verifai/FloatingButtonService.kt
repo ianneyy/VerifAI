@@ -47,6 +47,12 @@ import android.widget.LinearLayout
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.content.res.ColorStateList
+import kotlin.math.roundToInt
+
+data class VerificationLevel(
+    val label: String,
+    val description: String
+)
 
 class FloatingButtonService : Service() {
     companion object {
@@ -58,6 +64,39 @@ class FloatingButtonService : Service() {
         private const val SCREEN_CAPTURE_REQUEST_CODE = 1000
         private var isStoppingService = false
         private var isCapturing = false  // Add capturing state flag
+        
+        private val verificationLevels = mapOf(
+            "80-100" to VerificationLevel(
+                "Real",
+                "Matches trusted sources, writing style, and multiple articles."
+            ),
+            "60-79" to VerificationLevel(
+                "Likely Real",
+                "Mostly credible but may lack full source or match coverage."
+            ),
+            "40-59" to VerificationLevel(
+                "Suspicious",
+                "Some red flags in writing, source, or article consistency. May have contextual mismatches (e.g., celebrity or personality misalignment)."
+            ),
+            "20-39" to VerificationLevel(
+                "Likely False",
+                "Content contains multiple elements that appear fabricated."
+            ),
+            "0-19" to VerificationLevel(
+                "Fake",
+                "Content is confirmed to be false or deliberately misleading."
+            )
+        )
+
+        private fun getVerificationLevel(value: Int): VerificationLevel {
+            return when {
+                value >= 80 -> verificationLevels["80-100"]!!
+                value >= 60 -> verificationLevels["60-79"]!!
+                value >= 40 -> verificationLevels["40-59"]!!
+                value >= 20 -> verificationLevels["20-39"]!!
+                else -> verificationLevels["0-19"]!!
+            }
+        }
     }
 
     private lateinit var windowManager: WindowManager
@@ -458,10 +497,10 @@ class FloatingButtonService : Service() {
             contentText?.text = "No text extracted yet."
 
         // Set up result fields with default values
-            popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+25"
-            popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "+25"
-            popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+25"
-            popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+25"
+            popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+25%"
+            popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "+25%"
+            popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+25%"
+            popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+25%"
 
         val displayMetrics = resources.displayMetrics
             val width = (displayMetrics.widthPixels * 0.9).toInt()
@@ -581,14 +620,19 @@ class FloatingButtonService : Service() {
                         val score = jsonResponse.getInt("score")
 
 
-                        val sourceCredibility = jsonResponse.getString("source_credibility")
-                        val sourceCredibilityScore = if (sourceCredibility == "Credible") "+25" else "0"
-                        val sourceCredibilityIssueModal = if (sourceCredibility == "Credible") "" else "Click to see possible issues"
+                        val sourceScore = jsonResponse.getInt("source_score")
+                
+                        val sourceCredibilityIssueModal = if (sourceScore >= 1 ) "" else "Click to see possible issues"
 
                         val matchedArticles = jsonResponse.getJSONArray("matched_articles")
-                        val matchedArticlesCount = matchedArticles.length()
-                        val matchedArticlesCountScore = if (matchedArticlesCount >= 1) "+25" else "0"
-                        val matchedArticlesCountIssueModal = if (matchedArticlesCount >= 1) "" else "Click to see possible issues"
+                        val matchedArticleScore = jsonResponse.getDouble("total_ave_rounded")
+
+                        val whole = matchedArticleScore.roundToInt()
+
+                        // val matchedArticlesCount = matchedArticles.length()
+
+                   
+                        val matchedArticlesCountIssueModal = if (matchedArticleScore >= 1) "" else "Click to see possible issues"
 
                         val matchedPerson = jsonResponse.getBoolean("match_person")
                         val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
@@ -606,18 +650,18 @@ class FloatingButtonService : Service() {
                         // val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
                        
                        val label = when {
-                            score == 100 -> "Real"
-                            score >= 70 -> "Likely Real"
-                            score >= 50 -> "Suspicious"
-                            score >= 25 -> "Likely False"
+                            score >= 80 -> "Real"
+                            score >= 60 -> "Likely Real"
+                            score >= 40 -> "Suspicious"
+                            score >= 20 -> "Likely False"
                             else -> "Fake"
                         }
                         val colorLabel = when {
-                            score == 100 -> "#4CD964"
-                            score >= 70 -> "#FFCC00"
-                            score >= 50 -> "#FF9500"
-                            score >= 25 -> "#FF3B30"
-                            else -> "#8E8E93"
+                            score >= 80 -> "#4CD964"
+                            score >= 60 -> "#a3e635"
+                            score >= 40 -> "#FFCC00"
+                            score >= 20 -> "#fb923c"
+                            else -> "#FF3B30"
                         }
                         // Update UI on the main thread
                         Handler(Looper.getMainLooper()).post {
@@ -635,6 +679,7 @@ class FloatingButtonService : Service() {
 
 
                                     // Update gauge if available
+                                    updateVerificationUI(score)
 
                                     donutProgressPercent?.text = "$score%"
                                     donutProgressLabel?.text = label
@@ -646,10 +691,11 @@ class FloatingButtonService : Service() {
                                     }
 
                                     // sourceCredibilityScore
-                                    popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = sourceCredibilityScore
+                                    popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+$sourceScore%"
                                     val scText = popupView?.findViewById<TextView>(R.id.source_credibility_score)
-                                    val scColor = if (sourceCredibilityScore == "+25") "#9DFFBA" else "#FF797B"
+                                    val scColor = if (sourceScore >= 1) "#9DFFBA" else "#FF797B"
                                     scText?.setTextColor(Color.parseColor(scColor))
+
                                     val sourceCredibilityIssueText = popupView?.findViewById<TextView>(R.id.source_credibility_modal_issue)
                                     sourceCredibilityIssueText?.text = sourceCredibilityIssueModal
                                     sourceCredibilityIssueText?.visibility = if (sourceCredibilityIssueModal.isEmpty()) View.GONE else View.VISIBLE
@@ -659,7 +705,7 @@ class FloatingButtonService : Service() {
 
 
                                       // predictionScore
-                                    popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = predictionScore
+                                    popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "$predictionScore%"
                                     val pText = popupView?.findViewById<TextView>(R.id.content_authenticity_score)
                                     val pColor = if (predictionScore == "+25") "#9DFFBA" else "#FF797B"
                                     pText?.setTextColor(Color.parseColor(pColor))
@@ -669,10 +715,12 @@ class FloatingButtonService : Service() {
                                     val pBorderColor = popupView?.findViewById<View>(R.id.content_authenticity_border_color)
                                     pBorderColor?.setBackgroundColor(Color.parseColor(pColor))
 
+                                    val wholeNum = whole.toString()
+
                                       // matchedArticlesCountScore
-                                    popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = matchedArticlesCountScore
+                                    popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+$wholeNum%"
                                     val maText = popupView?.findViewById<TextView>(R.id.matched_article_score)
-                                    val maColor = if (matchedArticlesCountScore == "+25") "#9DFFBA" else "#FF797B"
+                                    val maColor = if (matchedArticleScore >= 1) "#9DFFBA" else "#FF797B"
                                     maText?.setTextColor(Color.parseColor(maColor))
                                     val matchedArticlesCountIssueText = popupView?.findViewById<TextView>(R.id.matched_article_modal_issue)
                                     matchedArticlesCountIssueText?.text = matchedArticlesCountIssueModal
@@ -681,7 +729,7 @@ class FloatingButtonService : Service() {
                                     maBorderColor?.setBackgroundColor(Color.parseColor(maColor))
                                     
                                       // matchedPersonScore
-                                    popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = matchedPersonScore
+                                    popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "$matchedPersonScore%"
                                     val mpText = popupView?.findViewById<TextView>(R.id.face_context_matching_score)
                                     val mpColor = if (matchedPersonScore == "+25") "#9DFFBA" else "#FF797B"
                                     mpText?.setTextColor(Color.parseColor(mpColor))
@@ -873,5 +921,23 @@ class FloatingButtonService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
+    }
+
+    private fun updateVerificationUI(score: Int) {
+        val verificationLevel = getVerificationLevel(score)
+        
+        Handler(Looper.getMainLooper()).post {
+            try {
+                if (popupView != null) {
+                    // Update the description text
+                    popupView?.findViewById<TextView>(R.id.description)?.text = verificationLevel.description
+                    
+                    // Update the label
+                    
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating verification UI", e)
+            }
+        }
     }
 }

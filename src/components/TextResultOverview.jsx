@@ -1,4 +1,3 @@
-/* eslint-disable no-cond-assign */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useContext} from 'react';
 
@@ -19,15 +18,11 @@ import {
   
 } from 'react-native';
 
-const ResultsOverview = ({
+const TextResultsOverview = ({
   activeContent,
   setActiveContent,
-  sourceScore,
   prediction,
-  articleCount,
-  matchedPerson,
   matchedArticleScore,
-  faceRecognition,
   loading,
   accentColor,
   subtitleColor,
@@ -89,81 +84,13 @@ const ResultsOverview = ({
         </View>
       </View>
       {activeContent === 'content1' && (
-        // SOURCE CREDIBILITY
-
         <View style={styles.content}>
-          <TouchableOpacity
-            onPress={() => {
-              if (sourceScore <= 2) {
-                openReasonModal(
-                  'Source Credibility',
-                  'The post came from an unknown or unverified page, and no trusted news organization was linked.',
-                  'No profile name, page name, or media outlet detected. The image may be cropped.',
-                  'The page is not listed in our trusted sources database.',
-                );
-              }
-            }}>
-            <View
-              style={[
-                styles.resultFlex,
-                {
-                  borderLeftWidth: 3,
-                  borderLeftColor: sourceScore >= 3 ? '#4CD964' : '#FF797B',
-                },
-              ]}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <Text
-                  style={[
-                    styles.recognizedText,
-                    {color: textColor, fontWeight: 'bold'},
-                  ]}>
-                  Source Credibility
-                </Text>
-                <Text
-                  style={[
-                    styles.recognizedText,
-                    {
-                      color: sourceScore >= 3 ? '#4CD964' : '#FF797B',
-                      fontWeight: 'bold',
-                    },
-                  ]}>
-                  +{sourceScore}%
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.recognizedText,
-                  {color: subtitleColor, fontSize: 12},
-                ]}>
-                Checks if the news comes from a trusted and reliable source.
-              </Text>
-              {sourceScore <= 2 && (
-                <Text
-                  style={[
-                    styles.recognizedText,
-                    {
-                      color: subtitleColor,
-                      fontSize: 12,
-                      textAlign: 'right',
-                      fontWeight: 'bold',
-                    },
-                  ]}>
-                  Click to see possible issues
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
-
           {/* CONTENT AUTHENTICITY */}
           <TouchableOpacity
             onPress={() => {
               if (prediction !== 'Credible') {
                 openReasonModal(
-                  'Content Authenticity',
+                  'Writing Style',
                   'The writing style do not match how real news is usually written.',
                   'The tone is too emotional, biased, or exaggerated',
                   'The text contains too many spelling or grammar issues.',
@@ -189,7 +116,7 @@ const ResultsOverview = ({
                     styles.recognizedText,
                     {color: textColor, fontWeight: 'bold'},
                   ]}>
-                  Content Authenticity
+                  Writing Style
                 </Text>
                 <Text
                   style={[
@@ -199,7 +126,7 @@ const ResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {prediction === 'Credible' ? '+25%' : '0'}
+                  {prediction === 'Credible' ? '+50%' : '+0%'}
                 </Text>
               </View>
               <Text
@@ -270,7 +197,7 @@ const ResultsOverview = ({
                     },
                   ]}>
                   {/* {articleCount || 0} matching {articleCount === 1 || articleCount === 0 ? 'article' : 'articles'} */}
-                  +{matchedArticleScore}%
+                  +{matchedArticleScore >= 1 ? matchedArticleScore : '0'}%
                 </Text>
               </View>
               <Text
@@ -282,92 +209,6 @@ const ResultsOverview = ({
               </Text>
 
               {matchedArticleScore <= 0 && (
-                <Text
-                  style={[
-                    styles.recognizedText,
-                    {
-                      color: subtitleColor,
-                      fontSize: 12,
-                      textAlign: 'right',
-                      fontWeight: 'bold',
-                    },
-                  ]}>
-                  Click to see possible issues
-                </Text>
-              )}
-            </View>
-          </TouchableOpacity>
-          {/* FACE CONTEXT MATCHING */}
-          <TouchableOpacity
-            onPress={() => {
-              const faceNotDetected =
-                faceRecognition.trim().toLowerCase() !== 'no face detected';
-              const noMatchedPerson = !matchedPerson;
-
-              if (faceNotDetected || noMatchedPerson) {
-                openReasonModal(
-                  'Face & Context Matching',
-                  'No face was detected in the uploaded image, or the name mentioned in the post doesn’t match any known identity from the image.',
-                  'Name in post doesn’t appear in known public databases.',
-                  'The person in the image may be misidentified due to limited reference data.',
-                );
-              }
-            }}>
-            <View
-              style={[
-                styles.resultFlex,
-                {
-                  borderLeftWidth: 3,
-                  borderLeftColor:
-                    faceRecognition.trim().toLowerCase() ===
-                      'no face detected' || matchedPerson
-                      ? '#4CD964'
-                      : '#FF797B',
-                },
-              ]}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <Text
-                  style={[
-                    styles.recognizedText,
-                    {color: textColor, fontWeight: 'bold'},
-                  ]}>
-                  Face & Context Matching {matchedPerson}
-                </Text>
-                <Text
-                  style={[
-                    styles.recognizedText,
-                    {
-                      color:
-                        faceRecognition.trim().toLowerCase() ===
-                          'no face detected' || matchedPerson
-                          ? '#4CD964'
-                          : '#FF797B',
-                      fontWeight: 'bold',
-                    },
-                  ]}>
-                  {faceRecognition.trim().toLowerCase() ===
-                    'no face detected' || matchedPerson
-                    ? '+25%'
-                    : '0'}
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.recognizedText,
-                  {color: subtitleColor, fontSize: 12},
-                ]}>
-                If a person is present in the image, checks if the name
-                mentioned in the news is actually the person in the attached
-                post.
-              </Text>
-              {!(
-                faceRecognition.trim().toLowerCase() === 'no face detected' ||
-                matchedPerson
-              ) && (
                 <Text
                   style={[
                     styles.recognizedText,
@@ -459,7 +300,7 @@ const ResultsOverview = ({
   );
 };
 
-export default ResultsOverview;
+export default TextResultsOverview;
 
 const styles = StyleSheet.create({
   activeText: {
