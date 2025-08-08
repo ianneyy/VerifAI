@@ -42,8 +42,6 @@ import {
 const ResultScreen = () => {
   const route = useRoute();
   const { imageUri } = route.params;
-const [factChecks, setFactChecks] = useState([]);
-  const [modalVisible, setModalVisible] = useState(true);
   const navigation = useNavigation();
   const { theme } = useContext(ThemeContext);
   const [news, setNews] = useState([]);
@@ -55,7 +53,6 @@ const [factChecks, setFactChecks] = useState([]);
   const [sourceScore, setSourceScore] = useState(0);
   const [matchedArticleScore, setMatchedArticleScore] = useState(0);
   const [matchedPerson, setMatchedPerson] = useState(null);
-  const [sourceCredible, setsourceCredible] = useState('');
   const [prediction, setPrediction] = useState('');
   const [SourceName, setSourceName] = useState('');
   const [faceRecognition, setfaceRecognition] = useState('');
@@ -109,7 +106,7 @@ const [factChecks, setFactChecks] = useState([]);
             setSourceName(extractedData.sourceName);
             setSourceScore(extractedData.sourceScore);
             setMatchedPerson(extractedData.matchedPerson);
-            setMatchedArticleScore(extractedData.matchedArticleScore);
+            // setMatchedArticleScore(extractedData.matchedArticleScore);
 
             const factCheckData = {
               claim: extractedData.cleanedText,
@@ -120,6 +117,7 @@ const [factChecks, setFactChecks] = useState([]);
               matched_article: extractedData.matchedArticleScore,
               matched_person: extractedData.matchedPerson,
               face_recognition: extractedData.face_recognition.artist,
+              method: 'Image Upload',
             };
 
             console.log('📝 Inserting fact check:', factCheckData);
@@ -207,9 +205,7 @@ const [factChecks, setFactChecks] = useState([]);
                 setActiveContent={setActiveContent}
                 sourceScore={sourceScore}
                 prediction={prediction}
-                articleCount={articleCount}
                 matchedPerson={matchedPerson}
-                matchedArticleScore={matchedArticleScore}
                 faceRecognition={faceRecognition}
                 loading={loading}
                 accentColor={accentColor}
@@ -224,7 +220,7 @@ const [factChecks, setFactChecks] = useState([]);
                 setIssueModalReason1={setIssueModalReason1}
                 setIssueModalReason2={setIssueModalReason2}
                 setIssueModalVisible={setIssueModalVisible}
-                // styles={styles}
+              
               />
               <IssueModal
                 visible={issueModalVisible}

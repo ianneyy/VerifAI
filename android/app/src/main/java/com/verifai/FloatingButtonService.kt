@@ -48,7 +48,8 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.content.res.ColorStateList
 import kotlin.math.roundToInt
-
+import android.database.sqlite.SQLiteDatabase
+import android.database.Cursor
 data class VerificationLevel(
     val label: String,
     val description: String
@@ -435,6 +436,37 @@ class FloatingButtonService : Service() {
         }
     }
 
+    private fun insertData(context: Context, claim: String, source: String, verdict: Int, source_score: Int, writing_style: String, matched_article: Int, matched_person: String, face_recognition: String, created_at: String, method: String) {
+        val dbPath = context.getDatabasePath("factchecker.db")
+
+        val db = SQLiteDatabase.openDatabase(
+            dbPath.absolutePath,
+            null,
+            SQLiteDatabase.OPEN_READWRITE
+        )
+        val values = ContentValues().apply {
+            put("claim", claim)
+            put("source", source)
+            put("verdict", verdict)
+            put("source_score", source_score)
+            put("writing_style", writing_style)
+            put("matched_article", matched_article)
+            put("matched_person", matched_person)
+            put("face_recognition", face_recognition)
+            put("created_at", created_at)
+            put("method", method)
+        }
+
+        val newRowId = db.insert("verified", null, values)
+
+        if (newRowId != -1L) {
+            Log.d("SQLite", "Inserted successfully with row id: $newRowId")
+        } else {
+            Log.e("SQLite", "Insert failed")
+        }
+
+        db.close()
+    }
     private fun showScreenshotPreview(bitmap: Bitmap) {
         try {
         val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as android.view.LayoutInflater
@@ -570,15 +602,30 @@ class FloatingButtonService : Service() {
             }
         }
     }
-
+    private fun getServerUrl(): String {
+        return if (isEmulator()) {
+            "http://10.0.2.2:5001"
+        } else {
+            "http://192.168.56.1:5001" // <-- your laptop's real IP address
+        }
+    }
+    fun isEmulator(): Boolean {
+    return (Build.FINGERPRINT.contains("generic")
+            || Build.FINGERPRINT.lowercase().contains("emulator")
+            || Build.MODEL.contains("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            || Build.MANUFACTURER.contains("Genymotion")
+            || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+            || "google_sdk" == Build.PRODUCT)
+}
     private fun sendImageToServer(bitmap: Bitmap) {
         Thread {
             try {
                 // Show loading state
                 showLoadingState(true)
-
+                val serverUrl = getServerUrl()
                 // Send image to /news endpoint
-                val url = URL("http://10.0.2.2:5001/news")
+                val url = URL("$serverUrl/news")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
@@ -663,6 +710,11 @@ class FloatingButtonService : Service() {
                             score >= 20 -> "#fb923c"
                             else -> "#FF3B30"
                         }
+                        val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+                      
+                        insertData(this, cleanedText, sourceName, score, sourceScore, predictionScore, whole, matchedPersonScore, faceRecognition, currentTime, "VerifAI Assistant")
+
                         // Update UI on the main thread
                         Handler(Looper.getMainLooper()).post {
                             try {

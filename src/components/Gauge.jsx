@@ -5,38 +5,40 @@ import {AnimatedCircularProgress} from 'react-native-circular-progress';
 
 const Gauge = ({confidence, textColor}) => {
   const verificationLevels = {
-    '75-100': {
-      label: 'Real',
-      description:
-        'Matches trusted sources, writing style, and multiple articles.',
-    },
-    '60-74': {
-      label: 'Likely Real',
-      description:
-        'Mostly credible but may lack full source or match coverage.',
-    },
-    '40-59': {
-      label: 'Suspicious',
-      description:
-        'Some red flags in writing, source, or article consistency. May have contextual mismatches (e.g., celebrity or personality misalignment).',
-    },
-    '20-39': {
-      label: 'Likely False',
-      description: 'Content contains multiple elements that appear fabricated.',
-    },
-    '0-19': {
-      label: 'Fake',
-      description:
-        'Content is confirmed to be false or deliberately misleading.',
-    },
-  };
+  '100': {
+    label: 'High Credibility',
+    description:
+      'This source matches trusted outlets in style, facts, and coverage. Adheres to all major credibility and transparency standards.',
+  },
+  '75-99': {
+    label: 'Generally Credible',
+    description:
+      'Mostly credible and aligns with reliable sources, though some details or coverage may be incomplete.',
+  },
+  '60-74': {
+    label: 'Credible with Exceptions',
+    description:
+      'Generally credible but with notable issues — such as writing inconsistencies, questionable sources, or contextual mismatches (e.g., personality or topic misalignment).',
+  },
+  '40-59': {
+    label: 'Proceed with Caution',
+    description:
+      'Contains multiple questionable elements or factual inconsistencies that undermine reliability.',
+  },
+  '0-39': {
+    label: 'Proceed with Maximum Caution',
+    description:
+      'Content is confirmed false, misleading, or shows severe disregard for credibility standards.',
+  },
+};
+
 
   const getVerificationLevel = (value) => {
-    if (value >= 80) {return verificationLevels['75-100'];}
+    if (value === 100) {return verificationLevels['100'];}
+    if (value >= 75) {return verificationLevels['75-99'];}
     if (value >= 60) {return verificationLevels['60-74'];}
     if (value >= 40) {return verificationLevels['40-59'];}
-    if (value >= 20) {return verificationLevels['20-39'];}
-    return verificationLevels['0-19'];
+    return verificationLevels['0-39'];
   };
 
   const {description} = getVerificationLevel(confidence);
@@ -44,17 +46,17 @@ const Gauge = ({confidence, textColor}) => {
   return (
     <View style={{alignItems: 'center', marginTop: 50}}>
       <AnimatedCircularProgress
-        size={200}
-        width={15}
+        size={250}
+        width={25}
         fill={confidence}
         tintColor={
-          confidence >= 75
+          confidence === 100
             ? '#4CD964' // Green - Very Legit
-            : confidence >= 60
+            : confidence >= 75
             ? '#a3e635' // Yellow - Suspicious
-            : confidence >= 40
+            : confidence >= 60
             ? '#FFCC00' // Orange - Likely Fake
-            : confidence >= 20
+            : confidence >= 40
             ? '#fb923c'
             : '#FF3B30' // Red - Fake
         }
@@ -63,13 +65,13 @@ const Gauge = ({confidence, textColor}) => {
         duration={800}>
         {fill => {
           const color =
-            fill >= 75
+            fill === 100
               ? '#4CD964'
-              : fill >= 60
+              : fill >= 75
               ? '#a3e635'
-              : fill >= 40
+              : fill >= 60
               ? '#FFCC00'
-              : fill >= 20
+              : fill >= 40
               ? '#fb923c'
               : '#FF3B30';
 

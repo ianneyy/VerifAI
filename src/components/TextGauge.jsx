@@ -57,8 +57,12 @@ const TextGauge = ({confidence, recognizedText}) => {
         tintColor={
           confidence >= 75
             ? '#4CD964' // Green - Very Legit
-            : confidence >= 50
-            ? '#FFCC00' // Yellow - Suspicious
+            : confidence >= 60
+            ? '#a3e635'
+            : confidence >= 40
+            ? '#FFCC00'
+            : confidence >= 20
+            ? '#fb923c' // Yellow - Suspicious
             : '#FF3B30' // Red - Fake
         }
         backgroundColor="#E0E0E0"
@@ -66,10 +70,26 @@ const TextGauge = ({confidence, recognizedText}) => {
         duration={800}>
         {fill => {
           const color =
-            fill >= 75 ? '#4CD964' : fill >= 50 ? '#FFCC00' : '#FF3B30';
+            fill >= 75
+              ? '#4CD964'
+              : fill >= 60
+              ? '#a3e635'
+              : fill >= 40
+              ? '#FFCC00'
+              : fill >= 20
+              ? '#fb923c'
+              : '#FF3B30';
 
           const label =
-            fill >= 75 ? 'Real' : fill >= 50 ? 'Suspicious' : 'Fake';
+            fill >= 75
+              ? 'Real'
+              : fill >= 60
+              ? 'Likely Real'
+              : fill >= 40
+              ? 'Suspicious'
+              : fill >= 20 ? 'Likely False'
+
+              : 'Fake';
 
           return (
             <Text

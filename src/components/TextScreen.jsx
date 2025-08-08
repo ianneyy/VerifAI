@@ -55,7 +55,7 @@ const TextScreen = () => {
       <View style={[styles.header, {borderBottomColor: borderColor}]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}>
+          onPress={() => navigation.navigate('Home')}>
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: textColor}]}>

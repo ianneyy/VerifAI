@@ -16,41 +16,44 @@ import Icon from 'react-native-vector-icons/Feather';
 const ImageUploadHelp = ({visible, onClose}) =>{
 
   // Verification levels with descriptions
-  const verificationLevels = {
-    100: {
-      label: 'Real',
-      color: '#4CD964', // Green
-      description: 'Content matches writing style, and multiple articles.',
-      range: '75-100',
-    },
-    75: {
-      label: 'Likely Real',
-      color: '#a3e635', // Light green
-      description:
-        'Content appears authentic but may have minor inconsistencies.',
-      range: '60-74',
-    },
-    50: {
-      label: 'Suspicious',
-      color: '#FFCC00', // Yellow
-      description:
-        'Content has several red flags that question its authenticity.',
-      range: '40-59',
-    },
-    25: {
-      label: 'Likely False',
-      color: '#fb923c', // Orange
-      description: 'Content contains multiple elements that appear fabricated.',
-      range: '20-39',
-    },
-    0: {
-      label: 'Fake',
-      color: '#FF3B30', // Red
-      description:
-        'Content is confirmed to be false or deliberately misleading.',
-      range: '0-19',
-    },
-  };
+ const verificationLevels = {
+  100: {
+    label: 'High Credibility',
+    color: '#4CD964', // Green
+    description:
+      'Matches trusted sources in style, facts, and multiple articles. Adheres to all major credibility and transparency standards.',
+    range: '100',
+  },
+  75: {
+    label: 'Generally Credible',
+    color: '#a3e635', // Light green
+    description:
+      'Mostly credible and aligns with reliable sources, though some details or coverage may be incomplete.',
+    range: '75-99',
+  },
+  60: {
+    label: 'Credible with Exceptions',
+    color: '#FFCC00', // Yellow
+    description:
+      'Generally credible but with notable issues — such as writing inconsistencies, questionable sources, or contextual mismatches.',
+    range: '60-74',
+  },
+  40: {
+    label: 'Proceed with Caution',
+    color: '#fb923c', // Orange
+    description:
+      'Contains multiple questionable elements or factual inconsistencies that undermine reliability.',
+    range: '40-59',
+  },
+  0: {
+    label: 'Proceed with Maximum Caution',
+    color: '#FF3B30', // Red
+    description:
+      'Confirmed false, misleading, or shows severe disregard for credibility standards.',
+    range: '0-39',
+  },
+};
+
 
   return (
     <View>
@@ -68,13 +71,13 @@ const ImageUploadHelp = ({visible, onClose}) =>{
                 Verification Levels Explained
               </Text>
               <TouchableOpacity onPress={onClose}>
-                <Icon name="x" size={24} color="#000" />
+                <Icon name="x" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
 
             {/* Modal Body */}
             <ScrollView style={styles.modalBody}>
-              {Object.entries(verificationLevels).map(
+              {Object.entries(verificationLevels).reverse().map(
                 ([level, {label, color, description, range}]) => (
                   <View
                     key={level}
@@ -115,9 +118,10 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: 'white',
+    backgroundColor: '#0f172a',
     borderRadius: 12,
     overflow: 'hidden',
+    paddingBottom: 16,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -141,6 +145,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#fff',
   },
   modalBody: {
     padding: 16,
@@ -170,6 +175,6 @@ const styles = StyleSheet.create({
   },
   levelDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#d4d4d4',
   },
 });

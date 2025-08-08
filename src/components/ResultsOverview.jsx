@@ -24,9 +24,7 @@ const ResultsOverview = ({
   setActiveContent,
   sourceScore,
   prediction,
-  articleCount,
   matchedPerson,
-  matchedArticleScore,
   faceRecognition,
   loading,
   accentColor,
@@ -163,7 +161,7 @@ const ResultsOverview = ({
             onPress={() => {
               if (prediction !== 'Credible') {
                 openReasonModal(
-                  'Content Authenticity',
+                  'Writing Style',
                   'The writing style do not match how real news is usually written.',
                   'The tone is too emotional, biased, or exaggerated',
                   'The text contains too many spelling or grammar issues.',
@@ -189,7 +187,7 @@ const ResultsOverview = ({
                     styles.recognizedText,
                     {color: textColor, fontWeight: 'bold'},
                   ]}>
-                  Content Authenticity
+                  Writing Style
                 </Text>
                 <Text
                   style={[
@@ -199,7 +197,7 @@ const ResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {prediction === 'Credible' ? '+25%' : '0'}
+                  {prediction === 'Credible' ? '+20%' : '+0%'}
                 </Text>
               </View>
               <Text
@@ -229,7 +227,7 @@ const ResultsOverview = ({
 
           {/* MATCHED ARTICLE */}
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => {
               if (matchedArticleScore <= 0) {
                 openReasonModal(
@@ -269,7 +267,7 @@ const ResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {/* {articleCount || 0} matching {articleCount === 1 || articleCount === 0 ? 'article' : 'articles'} */}
+                 
                   +{matchedArticleScore}%
                 </Text>
               </View>
@@ -296,7 +294,7 @@ const ResultsOverview = ({
                 </Text>
               )}
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           {/* FACE CONTEXT MATCHING */}
           <TouchableOpacity
             onPress={() => {
@@ -306,7 +304,7 @@ const ResultsOverview = ({
 
               if (faceNotDetected || noMatchedPerson) {
                 openReasonModal(
-                  'Face & Context Matching',
+                  'Face - Content Matching',
                   'No face was detected in the uploaded image, or the name mentioned in the post doesn’t match any known identity from the image.',
                   'Name in post doesn’t appear in known public databases.',
                   'The person in the image may be misidentified due to limited reference data.',
@@ -335,7 +333,7 @@ const ResultsOverview = ({
                     styles.recognizedText,
                     {color: textColor, fontWeight: 'bold'},
                   ]}>
-                  Face & Context Matching {matchedPerson}
+                  Face-Content Matching {matchedPerson}
                 </Text>
                 <Text
                   style={[
@@ -351,8 +349,8 @@ const ResultsOverview = ({
                   ]}>
                   {faceRecognition.trim().toLowerCase() ===
                     'no face detected' || matchedPerson
-                    ? '+25%'
-                    : '0'}
+                    ? '+20%'
+                    : '+0%'}
                 </Text>
               </View>
               <Text
@@ -433,9 +431,14 @@ const ResultsOverview = ({
                       numberOfLines={2}>
                       {item.title}
                     </Text>
-                    <Text style={[styles.newsSource, {color: accentColor}]}>
-                      Source: {item.source}
-                    </Text>
+                    <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+                      <Text style={[styles.newsSource, {color: accentColor}]}>
+                        Source: {item.source}
+                      </Text>
+                      <Text style={[styles.newsSource, {color: '#22c55e', fontWeight: 'bold'}]}>
+                       Similarity: {item.similarity}%
+                      </Text>
+                    </View>
                     <Text
                       style={[styles.newsSnippet, {color: subtitleColor}]}
                       numberOfLines={3}>

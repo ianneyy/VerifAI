@@ -11,7 +11,8 @@
     android:layout_marginTop="40dp"
     android:layout_marginEnd="30dp"
     android:layout_marginBottom="40dp"
-    android:background="#1e293b"
+   
+     android:background="@drawable/rounded_popup_bg"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -28,6 +29,7 @@
                 android:backgroundTint="#0f172a"
                 android:padding="12dp"
                 android:text="Dismiss"
+                 android:background="@drawable/rounded_button"
                 android:textColor="#FFFFFF" />
 
             <ImageView
@@ -506,7 +508,7 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="Face &amp; Context Matching"
+                                        android:text="Face - Content Matching"
                                         android:textColor="#DDDDDD"
                                         android:textStyle="bold" />
 

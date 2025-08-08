@@ -22,7 +22,9 @@ export const initDB = async () => {
   try {
     console.log('📦 INIT Initializing database...');
     const database = await openDB();
-
+    // await database.executeSql(`
+    //   ALTER TABLE verified ADD COLUMN method TEXT;
+    // `);
     await database.executeSql(`
       CREATE TABLE IF NOT EXISTS verified (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +37,7 @@ export const initDB = async () => {
         matched_person VARCHAR(255),
         face_recognition VARCHAR(255),
         created_at TEXT
+        method TEXT
       );
     `);
     console.log('🗃️ Table `fact_checks` created or already exists.');
@@ -63,18 +66,19 @@ export const insertFactCheck = async fact => {
   const database = await openDB();
   await database.executeSql(
     `INSERT INTO verified 
-      (claim, source, verdict, source_score, writing_style, matched_article, matched_person, face_recognition,  created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (claim, source, verdict, source_score, writing_style, matched_article, matched_person, face_recognition,  created_at, method)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       fact.claim,
-      fact.source,
+      fact.source ?? null,
       fact.verdict,
-      fact.source_score,
+      fact.source_score ?? null,
       fact.writing_style,
       fact.matched_article,
-      fact.matched_person,
-      fact.face_recognition,
+      fact.matched_person ?? null,
+      fact.face_recognition ?? null,
       new Date().toISOString(),
+      fact.method ?? 'Unknown',
     ],
   );
   console.log('✅ Fact-check inserted.');
@@ -127,9 +131,12 @@ export const getFactCheckByURL = async url => {
     return null;
   }
 };
+
 export const getAllFactChecks = async () => {
   const database = await openDB();
-  const [results] = await database.executeSql(`SELECT * FROM verified`);
+  const [results] = await database.executeSql(
+    `SELECT * FROM verified ORDER BY id DESC`,
+  );
   const items = [];
   for (let i = 0; i < results.rows.length; i++) {
     items.push(results.rows.item(i));

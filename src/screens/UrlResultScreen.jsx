@@ -3,7 +3,7 @@
 
 import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
-import {submitText} from '../services/newsCall';
+import {submitText, submitUrl} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
 
 import {
@@ -22,20 +22,20 @@ import {
   Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import TextGauge from '../components/TextGauge';
+import Gauge from '../components/Gauge';
 import InstructionModal from '../components/InstructionModal';
 import IssueModal from '../components/IssueModal';
 import ExtractedText from '../components/ExtractedText';
-import TextResultOverview from '../components/TextResultOverview';
+import ResultsOverview from '../components/ResultsOverview';
 import Loading from '../components/Loading';
-import Help from '../components/TextScreenHelp';
+import ImageUploadHelp from '../components/ImageUploadHelp';
 import ClaimText from '../components/ClaimText';
 import NonClaimError from '../components/NonClaimError';
 import {insertFactCheck} from '../js/database';
 
-const TextResultScreen = () => {
+const UrlResultScreen = () => {
   const route = useRoute();
-  const {resultText} = route.params;
+  const {resultUrl} = route.params;
 
   const [modalVisible, setModalVisible] = useState(true);
   const navigation = useNavigation();
@@ -45,7 +45,7 @@ const TextResultScreen = () => {
   const [resultLoading, setResultLoading] = useState(false);
 
   const [text, setText] = useState('');
-  const [isClaim, setIsClaim] = useState(true);
+  // const [isClaim, setIsClaim] = useState(true);
 
 
   const [news, setNews] = useState([]);
@@ -61,6 +61,11 @@ const TextResultScreen = () => {
   const [issueModalReason2, setIssueModalReason2] = useState('');
   const [isHelpVisible, setHelpVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [faceRecognition, setfaceRecognition] = useState('');
+  const [cleanText, setCleanText] = useState('');
+  const [SourceName, setSourceName] = useState('');
+  const [sourceScore, setSourceScore] = useState(0);
+  const [matchedPerson, setMatchedPerson] = useState(null);
 
 
   const darkBackground = '#0f172a';
@@ -80,41 +85,46 @@ const TextResultScreen = () => {
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
 
   useEffect(() => {
-    const processText = async () => {
+    const processUrl = async () => {
       try {
-        if (!resultText) {
+        if (!resultUrl) {
           return;
         }
         setLoading(true);
-        const textResult = await submitText(resultText);
+        const urlResult = await submitUrl(resultUrl);
 
-        if (textResult) {
-          
-          setIsClaim(textResult.isClaim);
+        if (urlResult) {
 
-          console.log(textResult.isClaim);
-          if (!textResult.isClaim) {
-            setIsModalVisible(true);
-          } else {
             setIsModalVisible(false);
             setContentLoading(false);
-            setNews(textResult.matchedArticles);
-            setText(textResult.text);
-            setPrediction(textResult.prediction);
-            setGauge(textResult.score);
-            setMatchedArticleScore(textResult.matchedArticleScore);
+
+            setNews(urlResult.matchedArticles);
+            // setText(urlResult.text);
+            setfaceRecognition(urlResult.face_recognition.artist);
+            setCleanText(urlResult.description);
+            // setArticleCount(extractedData.matchedArticles.length);
+            setSourceName(urlResult.sourceName);
+            setSourceScore(urlResult.sourceScore);
+            setMatchedPerson(urlResult.matchedPerson);
+            setPrediction(urlResult.prediction);
+            setGauge(urlResult.score);
+            // setMatchedArticleScore(urlResult.matchedArticleScore);
             const factCheckData = {
-              claim: textResult.text,
-              verdict: textResult.score,
-              writing_style: textResult.prediction,
-              matched_article: textResult.matchedArticleScore,
-              method: 'Text Verification',
+               claim: urlResult.description,
+              source: urlResult.sourceName,
+              verdict: urlResult.score,
+              source_score: urlResult.sourceScore,
+              writing_style: urlResult.prediction,
+              matched_article: urlResult.matchedArticleScore,
+              matched_person: urlResult.matchedPerson,
+              face_recognition: urlResult.face_recognition.artist,
+              method: 'Url Verification',
             };
 
             console.log('📝 Inserting fact check:', factCheckData);
             await insertFactCheck(factCheckData);
             console.log('✅ Fact check inserted.');
-          }
+         
           
 
          
@@ -129,12 +139,10 @@ const TextResultScreen = () => {
         setResultLoading(false);
       }
     };
-    processText();
-  }, [resultText]);
+    processUrl();
+  }, [resultUrl]);
   
-    
-  
-  return isClaim ? (
+  return  (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <StatusBar
         barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
@@ -148,7 +156,7 @@ const TextResultScreen = () => {
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: textColor}]}>
-          Result
+          Url Result
         </Text>
         <TouchableOpacity
           style={styles.helpButton}
@@ -156,7 +164,10 @@ const TextResultScreen = () => {
           <Icon name="help-circle" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-      <Help visible={isHelpVisible} onClose={() => setHelpVisible(false)} />
+      <ImageUploadHelp
+          visible={isHelpVisible}
+          onClose={() => setHelpVisible(false)}
+        />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading ? (
@@ -172,37 +183,36 @@ const TextResultScreen = () => {
           <>
             {/* EXTRACTED TEXT */}
 
-            <ClaimText cleanText={text} textColor={textColor} />
+            <ClaimText cleanText={cleanText} textColor={textColor} />
 
             {/* GAUGE */}
             <View style={styles.textContainer}>
-              <TextGauge
-                confidence={gauge}
-                recognizedText={recognizedTextColor}
-              />
+             <Gauge confidence={gauge} textColor={recognizedTextColor} />
             </View>
 
             {/* PANEL RESULT OVERVIEW AND RELATED NEWS */}
-            <TextResultOverview
-              activeContent={activeContent}
-              setActiveContent={setActiveContent}
-              prediction={prediction}
-              matchedArticleScore={matchedArticleScore}
-              loading={loading}
-              accentColor={accentColor}
-              subtitleColor={subtitleColor}
-              placeholderTextColor={placeholderTextColor}
-              textColor={textColor}
-              theme={theme}
-              cleanText={text}
-              news={news}
-              setIssueModalTitle={setIssueModalTitle}
-              setIssueModalMessage={setIssueModalMessage}
-              setIssueModalReason1={setIssueModalReason1}
-              setIssueModalReason2={setIssueModalReason2}
-              setIssueModalVisible={setIssueModalVisible}
-              // styles={styles}
-            />
+            <ResultsOverview
+                activeContent={activeContent}
+                setActiveContent={setActiveContent}
+                sourceScore={sourceScore}
+                prediction={prediction}
+                matchedPerson={matchedPerson}
+                faceRecognition={faceRecognition}
+                loading={loading}
+                accentColor={accentColor}
+                subtitleColor={subtitleColor}
+                placeholderTextColor={placeholderTextColor}
+                textColor={textColor}
+                theme={theme}
+                cleanText={cleanText}
+                news={news}
+                setIssueModalTitle={setIssueModalTitle}
+                setIssueModalMessage={setIssueModalMessage}
+                setIssueModalReason1={setIssueModalReason1}
+                setIssueModalReason2={setIssueModalReason2}
+                setIssueModalVisible={setIssueModalVisible}
+              
+              />
             <IssueModal
               visible={issueModalVisible}
               onClose={() => setIssueModalVisible(false)}
@@ -215,17 +225,10 @@ const TextResultScreen = () => {
         )}
       </ScrollView>
     </SafeAreaView>
-  ) : (
-    <NonClaimError
-      visible={isModalVisible}
-      onClose={() => {
-        setIsModalVisible(false); // Close the modal
-        navigation.navigate('Text'); // Redirect to homepage
-      }}
-    />
+ 
   );
 };
-export default TextResultScreen;
+export default UrlResultScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
