@@ -31,7 +31,7 @@ import Loading from '../components/Loading';
 import Help from '../components/TextScreenHelp';
 import ClaimText from '../components/ClaimText';
 import NonClaimError from '../components/NonClaimError';
-import {insertFactCheck} from '../js/database';
+import {insertFactCheck, initDB} from '../js/database';
 
 const TextResultScreen = () => {
   const route = useRoute();
@@ -85,6 +85,7 @@ const TextResultScreen = () => {
         if (!resultText) {
           return;
         }
+        await initDB();
         setLoading(true);
         const textResult = await submitText(resultText);
 
@@ -107,7 +108,6 @@ const TextResultScreen = () => {
               claim: textResult.text,
               verdict: textResult.score,
               writing_style: textResult.prediction,
-              matched_article: textResult.matchedArticleScore,
               method: 'Text Verification',
             };
 

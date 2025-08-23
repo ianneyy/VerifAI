@@ -22,9 +22,7 @@ export const initDB = async () => {
   try {
     console.log('📦 INIT Initializing database...');
     const database = await openDB();
-    // await database.executeSql(`
-    //   ALTER TABLE verified ADD COLUMN method TEXT;
-    // `);
+
     await database.executeSql(`
       CREATE TABLE IF NOT EXISTS verified (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,10 +31,9 @@ export const initDB = async () => {
         verdict INTEGER,
         source_score INTEGER,
         writing_style INTEGER,
-        matched_article INTEGER,
         matched_person VARCHAR(255),
         face_recognition VARCHAR(255),
-        created_at TEXT
+        created_at TEXT,
         method TEXT
       );
     `);
@@ -50,6 +47,7 @@ export const initDB = async () => {
         url TEXT,
         source TEXT,
         snippet TEXT,
+        similarity INTEGER,
         FOREIGN KEY(fact_check_id) REFERENCES fact_checks(id) ON DELETE CASCADE
       );
     `);
@@ -66,15 +64,14 @@ export const insertFactCheck = async fact => {
   const database = await openDB();
   await database.executeSql(
     `INSERT INTO verified 
-      (claim, source, verdict, source_score, writing_style, matched_article, matched_person, face_recognition,  created_at, method)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (claim, source, verdict, source_score, writing_style, matched_person, face_recognition,  created_at, method)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       fact.claim,
       fact.source ?? null,
       fact.verdict,
       fact.source_score ?? null,
       fact.writing_style,
-      fact.matched_article,
       fact.matched_person ?? null,
       fact.face_recognition ?? null,
       new Date().toISOString(),

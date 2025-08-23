@@ -6,7 +6,7 @@ import {View, Text, FlatList, StyleSheet, Button, SafeAreaView, TouchableOpacity
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {ThemeContext} from '../../App';
 import Icon from 'react-native-vector-icons/Feather';
-
+import dayjs from 'dayjs';
 import {
   initDB,
   insertFactCheck,
@@ -52,35 +52,38 @@ const [kotlinResult, setKotlinResult] = useState(null);
   }, []);
 
   const verificationLevels = {
-    '75-100': {
-      label: 'Real',
+    '100': {
+      label: 'High Credibility',
       color: '#4CD964',
     },
-    '60-74': {
-      label: 'Likely Real',
+    '75-99': {
+      label: 'Generally Credible',
       color: '#a3e635',
 
     },
-    '40-59': {
-      label: 'Suspicious',
+    '60-74': {
+      label: 'Credible with Exceptions',
       color: '#FFCC00',
 
     },
-    '20-39': {
-      label: 'Likely False',
+    '40-59': {
+      label: 'Proceed with Caution',
       color: '#fb923c',
 
     },
-    '0-19': {
-      label: 'Fake',
+    '0-39': {
+      label: 'Proceed with Maximum Caution',
       color: '#FF3B30',
 
     },
   };
 
   const getVerificationLevel = value => {
+    if (value === 100) {
+      return verificationLevels['100'];
+    }
     if (value >= 75) {
-      return verificationLevels['75-100'];
+      return verificationLevels['75-99'];
     }
     if (value >= 60) {
       return verificationLevels['60-74'];
@@ -88,10 +91,7 @@ const [kotlinResult, setKotlinResult] = useState(null);
     if (value >= 40) {
       return verificationLevels['40-59'];
     }
-    if (value >= 20) {
-      return verificationLevels['20-39'];
-    }
-    return verificationLevels['0-19'];
+    return verificationLevels['0-39'];
   };
 
   console.log(factChecks.length);
@@ -132,7 +132,22 @@ const [kotlinResult, setKotlinResult] = useState(null);
               </Text>
             ) : null}
           </View>
-          <View style={{gap: 12, alignItems: 'flex-end'}}>
+         <View
+  style={{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center', // vertical alignment
+    gap: 12,
+  }}>
+            <Text
+              style={{
+                color: '#737373',
+                textAlign: 'center',
+               fontSize: 12,
+                fontWeight: '400',
+              }}>
+              {dayjs(item.created_at).format('MMM D, YYYY • h:mm A')}
+            </Text>
             <Text
               style={{
                 color: textColor,

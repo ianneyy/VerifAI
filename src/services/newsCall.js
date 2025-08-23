@@ -1,6 +1,6 @@
 // const SERVER_URL = 'http://192.168.215.193:5001';
 // const SERVER_URL = 'http://192.168.186.193:5001';
-  const SERVER_URL = 'http://192.168.1.7:5001';
+  const SERVER_URL = 'http://192.168.1.5:5001';
 
 import {Platform} from 'react-native';
 import DeviceInfo from 'react-native-device-info';

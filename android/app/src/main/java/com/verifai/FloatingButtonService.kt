@@ -492,7 +492,7 @@ class FloatingButtonService : Service() {
             btnResults?.setTextColor(Color.parseColor("#FFFFFF"))
             btnResults?.setBackgroundColor(Color.parseColor("#2979FF"))
             btnNews?.setTextColor(Color.parseColor("#2979FF"))
-            btnNews?.setBackgroundColor(Color.parseColor("#1e293b"))
+            btnNews?.setBackgroundColor(Color.parseColor("#f8fafc"))
 
             // Set up click listeners
             btnResults?.setOnClickListener {
@@ -504,7 +504,7 @@ class FloatingButtonService : Service() {
 
 
                 btnNews?.setTextColor(Color.parseColor("#2979FF"))
-                btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1e293b"))
+                btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#f8fafc"))
 
             }
 
@@ -517,7 +517,7 @@ class FloatingButtonService : Service() {
 
                                             
                 btnResults?.setTextColor(Color.parseColor("#2979FF"))
-                btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1e293b"))
+                btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#f8fafc"))
              }
             // Show loading, hide content initially
             loadingContainer?.visibility = View.VISIBLE
@@ -529,7 +529,7 @@ class FloatingButtonService : Service() {
             contentText?.text = "No text extracted yet."
 
         // Set up result fields with default values
-            popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+25%"
+            // popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+25%"
             popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "+25%"
             popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+25%"
             popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+25%"
@@ -606,7 +606,7 @@ class FloatingButtonService : Service() {
         return if (isEmulator()) {
             "http://10.0.2.2:5001"
         } else {
-            "http://192.168.56.1:5001" // <-- your laptop's real IP address
+            "http://192.168.1.5:5001" // <-- your laptop's real IP address
         }
     }
     fun isEmulator(): Boolean {
@@ -685,29 +685,29 @@ class FloatingButtonService : Service() {
                         val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
                         Log.d(TAG, "matchedPerson: $matchedPerson, faceRecognition: $faceRecognition")
 
-                        val matchedPersonScore = if (matchedPerson || faceRecognition == "No face detected") "+25" else "0"
+                        val matchedPersonScore = if (matchedPerson || faceRecognition == "No face detected") "+9" else "+0"
                         val matchedPersonIssueModal = if (matchedPerson || faceRecognition == "No face detected") "" else "Click to see possible issues"
 
                         
                         val prediction = jsonResponse.getString("prediction")
-                        val predictionScore = if (prediction == "Credible") "+25" else "0"
+                        val predictionScore = if (prediction == "Credible") "+19" else "+0"
                         val predictionIssueModal = if (prediction == "Credible") "" else "Click to see possible issues"
 
 
                         // val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
                        
                        val label = when {
-                            score >= 80 -> "Real"
-                            score >= 60 -> "Likely Real"
-                            score >= 40 -> "Suspicious"
-                            score >= 20 -> "Likely False"
-                            else -> "Fake"
+                            score == 100 -> "High Credibility"
+                            score >= 75 -> "Generally Credible"
+                            score >= 60 -> "Credible with Exceptions"
+                            score >= 40 -> "Proceed with Caution"
+                            else -> "Proceed with Maximum Caution"
                         }
                         val colorLabel = when {
-                            score >= 80 -> "#4CD964"
-                            score >= 60 -> "#a3e635"
-                            score >= 40 -> "#FFCC00"
-                            score >= 20 -> "#fb923c"
+                            score == 100 -> "#4CD964"
+                            score >= 75 -> "#a3e635"
+                            score >= 60 -> "#FFCC00"
+                            score >= 40 -> "#fb923c"
                             else -> "#FF3B30"
                         }
                         val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
@@ -759,7 +759,7 @@ class FloatingButtonService : Service() {
                                       // predictionScore
                                     popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "$predictionScore%"
                                     val pText = popupView?.findViewById<TextView>(R.id.content_authenticity_score)
-                                    val pColor = if (predictionScore == "+25") "#9DFFBA" else "#FF797B"
+                                    val pColor = if (predictionScore == "+19") "#9DFFBA" else "#FF797B"
                                     pText?.setTextColor(Color.parseColor(pColor))
                                     val predictionIssueText = popupView?.findViewById<TextView>(R.id.content_authenticity_modal_issue)
                                     predictionIssueText?.text = predictionIssueModal
@@ -770,20 +770,20 @@ class FloatingButtonService : Service() {
                                     val wholeNum = whole.toString()
 
                                       // matchedArticlesCountScore
-                                    popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+$wholeNum%"
-                                    val maText = popupView?.findViewById<TextView>(R.id.matched_article_score)
-                                    val maColor = if (matchedArticleScore >= 1) "#9DFFBA" else "#FF797B"
-                                    maText?.setTextColor(Color.parseColor(maColor))
-                                    val matchedArticlesCountIssueText = popupView?.findViewById<TextView>(R.id.matched_article_modal_issue)
-                                    matchedArticlesCountIssueText?.text = matchedArticlesCountIssueModal
-                                    matchedArticlesCountIssueText?.visibility = if (matchedArticlesCountIssueModal.isEmpty()) View.GONE else View.VISIBLE
-                                    val maBorderColor = popupView?.findViewById<View>(R.id.matched_article_border_color)
-                                    maBorderColor?.setBackgroundColor(Color.parseColor(maColor))
+                                    // popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+$wholeNum%"
+                                    // val maText = popupView?.findViewById<TextView>(R.id.matched_article_score)
+                                    // val maColor = if (matchedArticleScore >= 1) "#9DFFBA" else "#FF797B"
+                                    // maText?.setTextColor(Color.parseColor(maColor))
+                                    // val matchedArticlesCountIssueText = popupView?.findViewById<TextView>(R.id.matched_article_modal_issue)
+                                    // matchedArticlesCountIssueText?.text = matchedArticlesCountIssueModal
+                                    // matchedArticlesCountIssueText?.visibility = if (matchedArticlesCountIssueModal.isEmpty()) View.GONE else View.VISIBLE
+                                    // val maBorderColor = popupView?.findViewById<View>(R.id.matched_article_border_color)
+                                    // maBorderColor?.setBackgroundColor(Color.parseColor(maColor))
                                     
                                       // matchedPersonScore
                                     popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "$matchedPersonScore%"
                                     val mpText = popupView?.findViewById<TextView>(R.id.face_context_matching_score)
-                                    val mpColor = if (matchedPersonScore == "+25") "#9DFFBA" else "#FF797B"
+                                    val mpColor = if (matchedPersonScore == "+9") "#9DFFBA" else "#FF797B"
                                     mpText?.setTextColor(Color.parseColor(mpColor))
                                      val matchedPersonIssueText = popupView?.findViewById<TextView>(R.id.face_context_matching_modal_issue)
                                     matchedPersonIssueText?.text = matchedPersonIssueModal
@@ -845,6 +845,7 @@ class FloatingButtonService : Service() {
                                             val title = article.getString("title")
                                             val source = article.getString("source")
                                             val snippet = article.getString("snippet")
+                                            val similarity = article.getInt("similarity")
                                             
                                             // Create article layout
                                             val articleLayout = LinearLayout(this).apply {
@@ -854,7 +855,7 @@ class FloatingButtonService : Service() {
                                                 ).apply {
                                                     bottomMargin = 16
                                                 }
-                                                setBackgroundColor(Color.parseColor("#1e293b"))
+                                                setBackgroundColor(Color.parseColor("#f8fafc"))
                                                 orientation = LinearLayout.VERTICAL
                                                 setPadding(12, 12, 12, 12)
                                             }
@@ -862,7 +863,7 @@ class FloatingButtonService : Service() {
                                             // Add title
                                             articleLayout.addView(TextView(this).apply {
                                                 text = title
-                                                setTextColor(Color.parseColor("#f8fafc"))
+                                                setTextColor(Color.parseColor("#0f172a"))
                                                 textSize = 16f
                                                 layoutParams = LinearLayout.LayoutParams(
                                                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -871,18 +872,53 @@ class FloatingButtonService : Service() {
                                             })
                                             
                                             // Add source
-                                            articleLayout.addView(TextView(this).apply {
-                                                text = "Source: $source"
-                                                setTextColor(Color.parseColor("#6C63FF"))
-                                                textSize = 12f
-                                                layoutParams = LinearLayout.LayoutParams(
-                                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                                    LinearLayout.LayoutParams.WRAP_CONTENT
-                                                ).apply {
-                                                    topMargin = 4
+                                            // articleLayout.addView(TextView(this).apply {
+                                            //     text = "Source: $source"
+                                            //     setTextColor(Color.parseColor("#6C63FF"))
+                                            //     textSize = 12f
+                                            //     layoutParams = LinearLayout.LayoutParams(
+                                            //         LinearLayout.LayoutParams.MATCH_PARENT,
+                                            //         LinearLayout.LayoutParams.WRAP_CONTENT
+                                            //     ).apply {
+                                            //         topMargin = 4
+                                            //     }
+                                            // })
+
+                                              // Add source and similarity in a horizontal layout
+                                                val sourceSimilarityLayout = LinearLayout(this).apply {
+                                                    layoutParams = LinearLayout.LayoutParams(
+                                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                                        LinearLayout.LayoutParams.WRAP_CONTENT
+                                                    ).apply {
+                                                        topMargin = 4
+                                                    }
+                                                    orientation = LinearLayout.HORIZONTAL
+                                                    gravity = Gravity.CENTER_VERTICAL
                                                 }
-                                            })
-                                            
+                                              // Source TextView (left aligned)
+                                                val sourceTextView = TextView(this).apply {
+                                                    text = "Source: $source"
+                                                    setTextColor(Color.parseColor("#6C63FF"))
+                                                    textSize = 12f
+                                                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                                                }
+
+                                                                                            // Similarity TextView (right aligned)
+                                                val similarityTextView = TextView(this).apply {
+                                                    text = "Similarity: $similarity%"
+                                                    setTextColor(Color.parseColor("#22c55e")) // Light blue
+                                                    textSize = 12f
+                                                    gravity = Gravity.END
+                                                    layoutParams = LinearLayout.LayoutParams(
+                                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                        LinearLayout.LayoutParams.WRAP_CONTENT
+                                                    )
+                                                }
+
+                                                   // Add both TextViews to the horizontal layout
+                                            sourceSimilarityLayout.addView(sourceTextView)
+                                            sourceSimilarityLayout.addView(similarityTextView)
+                                            articleLayout.addView(sourceSimilarityLayout)
                                             // Add snippet
                                             articleLayout.addView(TextView(this).apply {
                                                 text = snippet

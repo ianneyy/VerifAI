@@ -1,115 +1,109 @@
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable jsx-quotes */
 import React from 'react';
 import { Modal, View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 const InstructionModal = ({ visible, onClose }) => {
   return (
-    <Modal animationType="slide" transparent={true} visible={visible}>
+    <Modal animationType="fade" transparent={true} visible={visible}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <Text style={styles.title}>How to Use VeriFAI Image Scan</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>How to Use VeriFAI</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Icon name="x" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
 
-            <Text style={styles.sectionTitle}>How VeriFAI Works</Text>
-            <Text style={styles.bullet}>1. You upload a post screenshot.</Text>
-            <Text style={styles.bullet}>
-              2. VeriFAI extracts and analyzes the text.
-            </Text>
-            <Text style={styles.bullet}>
-              3. It finds matching articles and checks source credibility
-            </Text>
-            <Text style={styles.bullet}>
-              4. It analyzes the writing style to see if it matches how real
-              news is usually written.
-            </Text>
-            <Text style={styles.bullet}>
-              5. If there's a face, it attempts recognition of public figures.
-            </Text>
-
-            <Text style={styles.sectionTitle}>Quick Do's & Don'ts</Text>
-
-            <View
-              style={{
-                borderLeftWidth: 5,
-                borderLeftColor: '#69fa92',
-                gap: 10,
-                marginBottom: 12,
-                padding: 5,
-                backgroundColor: '#dcf5e3',
-              }}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Upload public social media post screenshots.
-                </Text>
-              </View>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Use high-quality screenshots.
-                </Text>
-              </View>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Include all relevant parts of the post.
-                </Text>
-              </View>
-            </View>
-            <View
-              style={{
-                borderLeftWidth: 5,
-                borderLeftColor: '#FF797B',
-                backgroundColor: '#f7d0d0',
-                gap: 10,
-                padding: 5,
-              }}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Crop out names, publisher, or page name.
-                </Text>
-              </View>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Upload random memes or photos not related to news or facts
-                </Text>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent} 
+            showsVerticalScrollIndicator={false}
+          >
+            {/* How it works section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>How it works</Text>
+              <View style={styles.stepContainer}>
+                <View style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>1</Text>
+                  </View>
+                  <Text style={styles.stepText}>Upload a post screenshot</Text>
+                </View>
+                <View style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>2</Text>
+                  </View>
+                  <Text style={styles.stepText}>Extract and analyze text content</Text>
+                </View>
+                <View style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>3</Text>
+                  </View>
+                  <Text style={styles.stepText}>Find matching articles and verify sources</Text>
+                </View>
+                <View style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>4</Text>
+                  </View>
+                  <Text style={styles.stepText}>Analyze writing style patterns</Text>
+                </View>
+                <View style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>5</Text>
+                  </View>
+                  <Text style={styles.stepText}>Identify public figures when present</Text>
+                </View>
               </View>
             </View>
 
-            <Text style={styles.sectionTitle}>Ideal Content Types</Text>
-            <View
-              style={{
-                borderLeftWidth: 5,
-                borderLeftColor: '#69fa92',
-                gap: 10,
-                marginBottom: 12,
-                padding: 5,
-                backgroundColor: '#dcf5e3',
-              }}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Social media posts (FB, X, IG).
-                </Text>
+            {/* Best practices section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Best practices</Text>
+              
+              <View style={styles.practiceCard}>
+                <Text style={styles.practiceTitle}>Recommended</Text>
+                <Text style={styles.practiceItem}>Use high-quality screenshots</Text>
+                <Text style={styles.practiceItem}>Include complete post content</Text>
+                <Text style={styles.practiceItem}>Keep publisher names visible</Text>
+                <Text style={styles.practiceItem}>Upload social media posts</Text>
               </View>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  News shared on social feeds.
-                </Text>
+
+              <View style={styles.avoidCard}>
+                <Text style={styles.avoidTitle}>Avoid</Text>
+                <Text style={styles.avoidItem}>Cropping out important details</Text>
+                <Text style={styles.avoidItem}>Uploading unrelated images</Text>
+                <Text style={styles.avoidItem}>Using blurry screenshots</Text>
               </View>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Posts claiming facts, events, or news stories.
-                </Text>
-              </View>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={[styles.bullet]}>
-                  Screenshots of questionnable claims or trending topics
-                </Text>
+            </View>
+
+            {/* Content types section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Ideal content types</Text>
+              <View style={styles.contentTypes}>
+                <View style={styles.contentType}>
+                  <Text style={styles.contentTypeTitle}>Social Posts</Text>
+                  <Text style={styles.contentTypeDesc}>Facebook, Twitter, Instagram posts</Text>
+                </View>
+                <View style={styles.contentType}>
+                  <Text style={styles.contentTypeTitle}>Shared News</Text>
+                  <Text style={styles.contentTypeDesc}>Articles shared on social feeds</Text>
+                </View>
+                <View style={styles.contentType}>
+                  <Text style={styles.contentTypeTitle}>Fact Claims</Text>
+                  <Text style={styles.contentTypeDesc}>Posts claiming facts or events</Text>
+                </View>
+                <View style={styles.contentType}>
+                  <Text style={styles.contentTypeTitle}>Trending Topics</Text>
+                  <Text style={styles.contentTypeDesc}>Viral or questionable claims</Text>
+                </View>
               </View>
             </View>
           </ScrollView>
 
-          <TouchableOpacity style={styles.button} onPress={onClose}>
-            <Text style={styles.buttonText}>Got it</Text>
+          {/* Footer button */}
+          <TouchableOpacity style={styles.primaryButton} onPress={onClose}>
+            <Text style={styles.primaryButtonText}>Get Started</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -122,52 +116,161 @@ export default InstructionModal;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
   modalContainer: {
-    width: '90%',
-    maxHeight: '90%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    elevation: 5,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '85%',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
   },
-  scrollContent: {
-    paddingBottom: 20,
-
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 15,
-    textAlign: 'center',
+    fontWeight: '600',
+    color: '#0f172a',
+    letterSpacing: -0.5,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  section: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginTop: 10,
-    marginBottom: 5,
+    color: '#374151',
+    marginBottom: 16,
+    letterSpacing: -0.3,
   },
-  bullet: {
+  stepContainer: {
+    gap: 12,
+  },
+  step: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#3b82f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  stepNumberText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  stepText: {
+    flex: 1,
     fontSize: 14,
-    marginLeft: 10,
-    marginBottom: 5,
+    color: '#4b5563',
+    lineHeight: 20,
+    paddingTop: 2,
   },
-  bold: {
-    fontWeight: 'bold',
+  practiceCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#22c55e',
   },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
+  practiceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#16a34a',
+    marginBottom: 8,
+  },
+  practiceItem: {
+    fontSize: 13,
+    color: '#166534',
+    marginBottom: 4,
+    paddingLeft: 8,
+  },
+  avoidCard: {
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ef4444',
+  },
+  avoidTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#dc2626',
+    marginBottom: 8,
+  },
+  avoidItem: {
+    fontSize: 13,
+    color: '#991b1b',
+    marginBottom: 4,
+    paddingLeft: 8,
+  },
+  contentTypes: {
+    gap: 12,
+  },
+  contentType: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: '#94a3b8',
+  },
+  contentTypeTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 2,
+  },
+  contentTypeDesc: {
+    fontSize: 12,
+    color: '#64748b',
+    lineHeight: 16,
+  },
+  primaryButton: {
+    backgroundColor: '#6C63FF',
+    marginHorizontal: 24,
+    marginVertical: 20,
+    paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
+    shadowColor: '#6C63FF',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
-  buttonText: {
-    color: 'white',
+  primaryButtonText: {
+    color: '#ffffff',
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 15,
+    letterSpacing: -0.2,
   },
 });

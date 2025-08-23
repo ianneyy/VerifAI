@@ -31,7 +31,7 @@ import Loading from '../components/Loading';
 import ImageUploadHelp from '../components/ImageUploadHelp';
 import ClaimText from '../components/ClaimText';
 import NonClaimError from '../components/NonClaimError';
-import {insertFactCheck} from '../js/database';
+import {insertFactCheck, initDB} from '../js/database';
 
 const UrlResultScreen = () => {
   const route = useRoute();
@@ -90,6 +90,7 @@ const UrlResultScreen = () => {
         if (!resultUrl) {
           return;
         }
+        await initDB();
         setLoading(true);
         const urlResult = await submitUrl(resultUrl);
 
@@ -115,7 +116,6 @@ const UrlResultScreen = () => {
               verdict: urlResult.score,
               source_score: urlResult.sourceScore,
               writing_style: urlResult.prediction,
-              matched_article: urlResult.matchedArticleScore,
               matched_person: urlResult.matchedPerson,
               face_recognition: urlResult.face_recognition.artist,
               method: 'Url Verification',

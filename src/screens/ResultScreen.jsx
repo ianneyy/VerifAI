@@ -10,21 +10,16 @@ import SQLite from 'react-native-sqlite-storage';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
-  Linking,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  Alert,
-  Button,
-  Modal,
+ 
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Gauge from '../components/Gauge';
-import InstructionModal from '../components/InstructionModal';
+// import InstructionModal from '../components/InstructionModal';
 import IssueModal from '../components/IssueModal';
 import ExtractedText from '../components/ExtractedText';
 import ResultsOverview from '../components/ResultsOverview';
@@ -33,9 +28,6 @@ import ImageUploadHelp from '../components/ImageUploadHelp';
 import {
   initDB,
   insertFactCheck,
-  insertRelatedNews,
-  getAllFactChecks,
-  getRelatedNews,
 } from '../js/database';
 
 
@@ -51,7 +43,6 @@ const ResultScreen = () => {
   const [cleanText, setCleanText] = useState('');
   const [articleCount, setArticleCount] = useState(0);
   const [sourceScore, setSourceScore] = useState(0);
-  const [matchedArticleScore, setMatchedArticleScore] = useState(0);
   const [matchedPerson, setMatchedPerson] = useState(null);
   const [prediction, setPrediction] = useState('');
   const [SourceName, setSourceName] = useState('');
@@ -89,7 +80,7 @@ const ResultScreen = () => {
         if (!imageUri) {
           return;
         }
-        // await initDB();
+        await initDB();
 
         setLoading(true);
         const extractedData = await uploadImage(imageUri);

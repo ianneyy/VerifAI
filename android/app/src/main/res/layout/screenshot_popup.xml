@@ -28,7 +28,7 @@
                 android:layout_marginTop="16dp"
                 android:backgroundTint="#0f172a"
                 android:padding="12dp"
-                android:text="Dismiss"
+                android:text="Close"
                  android:background="@drawable/rounded_button"
                 android:textColor="#FFFFFF" />
 
@@ -75,7 +75,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Analyzing news content..."
-                    android:textColor="#FFFFFF"
+                    android:textColor="#0f172a"
                     android:textSize="16sp" />
 
                 <TextView
@@ -107,7 +107,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="BREAKING NEWS"
-                            android:textColor="#f8fafc"
+                            android:textColor="#0f172a"
                             android:textSize="16sp"
                             android:textStyle="bold" />
                         <TextView
@@ -116,7 +116,7 @@
                             android:layout_height="wrap_content"
                             android:text="Source: Rappler"
                             android:textStyle="italic"
-                            android:textColor="#8F90A6" />
+                            android:textColor="#6C63FF"/>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -181,7 +181,7 @@
                         
                         android:text="Content is factual, informative"
                         android:textSize="16sp"
-                        android:textColor="#8F90A6"
+                        android:textColor="#334155"
                         android:gravity="center"/>
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -205,7 +205,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:backgroundTint="#1e293b"
+                        android:backgroundTint="#f8fafc"
                         android:text="Related News"
                         android:textColor="#2979FF" />
                 </LinearLayout>
@@ -223,8 +223,8 @@
                         android:id="@+id/source_credibility"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:backgroundTint="#1e293b"
                         android:layout_marginBottom="12dp"
+                        android:backgroundTint="#f8fafc"
                         app:cardCornerRadius="0dp">
 
                         <!-- Border left color (credible 9DFFBA or not credible FF797B) -->
@@ -232,9 +232,9 @@
                             android:id="@+id/source_credibility_border_color"
                             android:layout_width="4dp"
                             android:layout_height="match_parent"
-                            android:background="#9DFFBA"
-                            android:layout_alignParentStart="true"/>
-                            <!-- Each result -->
+                            android:layout_alignParentStart="true"
+                            android:background="#9DFFBA" />
+                        <!-- Each result -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -243,9 +243,9 @@
                             android:layout_marginTop="4dp"
                             android:layout_marginEnd="4dp"
                             android:layout_marginBottom="10dp"
-                            android:background="#1e293b"
-                            android:backgroundTint="#1e293b"
-                           
+                            android:background="#f8fafc"
+                            android:backgroundTint="#f8fafc"
+
                             android:orientation="vertical"
                             android:padding="12dp">
 
@@ -262,7 +262,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="Source Credibility"
-                                        android:textColor="#DDDDDD"
+                                        android:textColor="#0f172a"
                                         android:textStyle="bold" />
 
                                     <TextView
@@ -270,7 +270,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="end"
-                                        android:text="+25"
+                                        android:text="+72%"
                                         android:textColor="#4CAF50"
                                         android:textStyle="bold" />
                                 </FrameLayout>
@@ -306,16 +306,16 @@
                         android:id="@+id/content_authenticity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:backgroundTint="#1e293b"
                         android:layout_marginBottom="12dp"
+                        android:backgroundTint="#f8fafc"
                         app:cardCornerRadius="0dp">
                         <!-- Border left color (credible 9DFFBA or not credible FF797B) -->
                         <View
                             android:id="@+id/content_authenticity_border_color"
                             android:layout_width="4dp"
                             android:layout_height="match_parent"
-                            android:background="#9DFFBA"
-                            android:layout_alignParentStart="true"/>
+                            android:layout_alignParentStart="true"
+                            android:background="#9DFFBA" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -325,9 +325,9 @@
                             android:layout_marginTop="4dp"
                             android:layout_marginEnd="4dp"
                             android:layout_marginBottom="10dp"
-                            android:background="#1e293b"
-                            android:backgroundTint="#1e293b"
-                           
+                            android:background="#f8fafc"
+                            android:backgroundTint="#f8fafc"
+
                             android:orientation="vertical"
                             android:padding="12dp">
 
@@ -344,7 +344,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="Writing Credibility"
-                                        android:textColor="#DDDDDD"
+                                        android:textColor="#0f172a"
                                         android:textStyle="bold" />
 
                                     <TextView
@@ -352,7 +352,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="end"
-                                        android:text="+25"
+                                        android:text="+19%"
                                         android:textColor="#4CAF50"
                                         android:textStyle="bold" />
                                 </FrameLayout>
@@ -384,103 +384,23 @@
                     </androidx.cardview.widget.CardView>
 
                     <!-- Matched Article Overview -->
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/matched_article"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:backgroundTint="#1e293b"
-                        android:layout_marginBottom="12dp"
-                        app:cardCornerRadius="0dp">
-                        <!-- Border left color (credible 9DFFBA or not credible FF797B) -->
-                        <View
-                            android:id="@+id/matched_article_border_color"
-                            android:layout_width="4dp"
-                            android:layout_height="match_parent"
-                            android:background="#9DFFBA"
-                            android:layout_alignParentStart="true"/>
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="2dp"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginTop="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:layout_marginBottom="10dp"
-                            android:background="#1e293b"
-                            android:backgroundTint="#1e293b"
-                           
-                            android:orientation="vertical"
-                            android:padding="12dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <FrameLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Matched Article"
-                                        android:textColor="#DDDDDD"
-                                        android:textStyle="bold" />
-
-                                    <TextView
-                                        android:id="@+id/matched_article_score"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_gravity="end"
-                                        android:text="+25"
-                                        android:textColor="#4CAF50"
-                                        android:textStyle="bold" />
-                                </FrameLayout>
-                            </LinearLayout>
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="Analyzes if other sources have published similar news"
-                                android:textColor="#888888"
-                                android:textSize="13sp" />
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content">
-
-                                <TextView
-                                    android:id="@+id/matched_article_modal_issue"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="end"
-                                    android:text="Click to see possible issues"
-                                    android:textColor="#64748b"
-                                    android:textStyle="bold" />
-                            </FrameLayout>
-
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
-
-                       <!-- Face & Context Matching Overview -->
+                    <!-- Face & Context Matching Overview -->
                     <androidx.cardview.widget.CardView
                         android:id="@+id/face_context_matching"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="#1e293b"
-                        android:backgroundTint="#1e293b"
                         android:layout_marginBottom="12dp"
+                        android:background="#f8fafc"
+                        android:backgroundTint="#f8fafc"
                         app:cardCornerRadius="0dp">
                         <!-- Border left color (credible 9DFFBA or not credible FF797B) -->
                         <View
                             android:id="@+id/face_context_matching_border_color"
                             android:layout_width="4dp"
                             android:layout_height="match_parent"
-                            android:background="#9DFFBA"
-                            android:layout_alignParentStart="true"/>
+                            android:layout_alignParentStart="true"
+                            android:background="#9DFFBA" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -490,9 +410,9 @@
                             android:layout_marginTop="4dp"
                             android:layout_marginEnd="4dp"
                             android:layout_marginBottom="10dp"
-                            android:background="#1e293b"
-                            android:backgroundTint="#1e293b"
-                           
+                            android:background="#f8fafc"
+                            android:backgroundTint="#f8fafc"
+
                             android:orientation="vertical"
                             android:padding="12dp">
 
@@ -509,7 +429,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="Face - Content Matching"
-                                        android:textColor="#DDDDDD"
+                                        android:textColor="#0f172a"
                                         android:textStyle="bold" />
 
                                     <TextView
@@ -517,7 +437,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="end"
-                                        android:text="+25"
+                                        android:text="+9%"
                                         android:textColor="#4CAF50"
                                         android:textStyle="bold" />
                                 </FrameLayout>
@@ -556,13 +476,13 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:paddingTop="16dp"
-                    android:backgroundTint="#1e293b"
+                    android:backgroundTint="#f8fafc"
 
                     android:visibility="visible">
                     <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:backgroundTint="#1e293b"
+                        android:backgroundTint="#f8fafc"
                         android:layout_marginBottom="24dp">
 
                        
@@ -574,7 +494,7 @@
                                 android:padding="12dp" />
 
 
-                </androidx.cardview.widget.CardView>
+                    </androidx.cardview.widget.CardView>
                 </LinearLayout>
                     
                 
