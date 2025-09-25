@@ -50,6 +50,8 @@ import android.content.res.ColorStateList
 import kotlin.math.roundToInt
 import android.database.sqlite.SQLiteDatabase
 import android.database.Cursor
+import android.view.MotionEvent
+import android.view.ViewGroup
 data class VerificationLevel(
     val label: String,
     val description: String
@@ -108,6 +110,18 @@ class FloatingButtonService : Service() {
     private var imageReader: ImageReader? = null
     private var isButtonVisible = false
     private var popupView: View? = null  // Add this line to store the popup view
+    
+    // Variables for drag functionality
+    private var initialX = 0
+    private var initialY = 0
+    private var initialTouchX = 0f
+    private var initialTouchY = 0f
+    private var buttonParams: WindowManager.LayoutParams? = null
+    
+    // Variables for two-click system
+    private var isFirstClick = true
+    private var clickResetHandler: Handler? = null
+    private var clickResetRunnable: Runnable? = null
 
      override fun onCreate() {
         super.onCreate()
@@ -196,7 +210,7 @@ class FloatingButtonService : Service() {
     }
 
     private fun addFloatingButton() {
-        val params = WindowManager.LayoutParams(
+        buttonParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -206,23 +220,83 @@ class FloatingButtonService : Service() {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
-        params.gravity = Gravity.TOP or Gravity.START
-        params.x = 50
-        params.y = 200
+        buttonParams?.gravity = Gravity.TOP or Gravity.START
+        buttonParams?.x = 50
+        buttonParams?.y = 200
 
         floatingButton = ImageView(this).apply {
             setImageResource(R.drawable.ic_floating)
             visibility = View.GONE  // Hidden by default
-            setOnClickListener {
-                Log.d(TAG, "Floating button clicked")
-                captureScreenshot()
+            
+            // Set up touch listener for dragging
+            setOnTouchListener { _, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        initialX = buttonParams?.x ?: 0
+                        initialY = buttonParams?.y ?: 0
+                        initialTouchX = event.rawX
+                        initialTouchY = event.rawY
+                        true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val deltaX = (event.rawX - initialTouchX).toInt()
+                        val deltaY = (event.rawY - initialTouchY).toInt()
+                        
+                        val newX = initialX + deltaX
+                        val newY = initialY + deltaY
+                        
+                        // Get screen dimensions
+                        val displayMetrics = resources.displayMetrics
+                        val screenWidth = displayMetrics.widthPixels
+                        val screenHeight = displayMetrics.heightPixels
+                        
+                        // Apply only boundary constraints (no center exclusion)
+                        // Use smaller buffer to allow button to reach edges
+                        val buttonBuffer = 50 // Small buffer in pixels
+                        
+                        val constrainedX = when {
+                            newX < 0 -> 0
+                            newX > screenWidth - buttonBuffer -> screenWidth - buttonBuffer
+                            else -> newX
+                        }
+                        
+                        val constrainedY = when {
+                            newY < 0 -> 0
+                            newY > screenHeight - buttonBuffer -> screenHeight - buttonBuffer
+                            else -> newY
+                        }
+                        
+                        buttonParams?.x = constrainedX
+                        buttonParams?.y = constrainedY
+                        
+                        try {
+                            windowManager.updateViewLayout(floatingButton, buttonParams)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error updating button position", e)
+                        }
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        // Check if this was a click (small movement)
+                        val deltaX = (event.rawX - initialTouchX).toInt()
+                        val deltaY = (event.rawY - initialTouchY).toInt()
+                        val distance = kotlin.math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble())
+                        
+                        if (distance < 10) { // Small threshold for click detection
+                            handleButtonClick()
+                        }
+                        true
+                    }
+                    else -> false
+                }
             }
+            
             // Add background and styling
             setBackgroundResource(R.drawable.assistive_touch_background)
-            alpha = 0.7f
+            alpha = 0.2f  // Start with 50% opacity
             elevation = 8f
         }
-        windowManager.addView(floatingButton, params)
+        windowManager.addView(floatingButton, buttonParams)
         Log.d(TAG, "Floating button added to window manager")
     }
 
@@ -604,9 +678,9 @@ class FloatingButtonService : Service() {
     }
     private fun getServerUrl(): String {
         return if (isEmulator()) {
-            "http://10.0.2.2:5001"
+            "https://ovx7-image-service.hf.space"
         } else {
-            "http://192.168.1.5:5001" // <-- your laptop's real IP address
+            "https://ovx7-image-service.hf.space" // <-- your laptop's real IP address
         }
     }
     fun isEmulator(): Boolean {
@@ -995,8 +1069,44 @@ class FloatingButtonService : Service() {
         }
     }
 
+    private fun handleButtonClick() {
+        if (isFirstClick) {
+            // First click - increase opacity and start timer
+            Log.d(TAG, "First click - increasing opacity")
+            floatingButton.alpha = 1.0f
+            isFirstClick = false
+            
+            // Cancel any existing reset timer
+            clickResetRunnable?.let { clickResetHandler?.removeCallbacks(it) }
+            
+            // Set up 5-second timer to reset
+            clickResetHandler = Handler(Looper.getMainLooper())
+            clickResetRunnable = Runnable {
+                Log.d(TAG, "Timer expired - resetting button")
+                floatingButton.alpha = 0.5f
+                isFirstClick = true
+            }
+            clickResetHandler?.postDelayed(clickResetRunnable!!, 5000)
+            
+        } else {
+            // Second click within 5 seconds - capture screenshot
+            Log.d(TAG, "Second click - capturing screenshot")
+            captureScreenshot()
+            
+            // Reset immediately after screenshot
+            floatingButton.alpha = 0.5f
+            isFirstClick = true
+            
+            // Cancel the timer since we're resetting
+            clickResetRunnable?.let { clickResetHandler?.removeCallbacks(it) }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        // Clean up timer
+        clickResetRunnable?.let { clickResetHandler?.removeCallbacks(it) }
+        
         if (::floatingButton.isInitialized) {
             windowManager.removeView(floatingButton)
         }

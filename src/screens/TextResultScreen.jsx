@@ -9,23 +9,15 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
-  Linking,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  Alert,
-  Button,
-  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import TextGauge from '../components/TextGauge';
-import InstructionModal from '../components/InstructionModal';
 import IssueModal from '../components/IssueModal';
-import ExtractedText from '../components/ExtractedText';
 import TextResultOverview from '../components/TextResultOverview';
 import Loading from '../components/Loading';
 import Help from '../components/TextScreenHelp';
@@ -37,12 +29,12 @@ const TextResultScreen = () => {
   const route = useRoute();
   const {resultText} = route.params;
 
-  const [modalVisible, setModalVisible] = useState(true);
+  // const [modalVisible, setModalVisible] = useState(true);
   const navigation = useNavigation();
   const {theme} = useContext(ThemeContext);
   const [loading, setLoading] = useState(false);
-  const [contentLoading, setContentLoading] = useState(false);
-  const [resultLoading, setResultLoading] = useState(false);
+  // const [contentLoading, setContentLoading] = useState(false);
+  // const [resultLoading, setResultLoading] = useState(false);
 
   const [text, setText] = useState('');
   const [isClaim, setIsClaim] = useState(true);
@@ -64,7 +56,7 @@ const TextResultScreen = () => {
 
 
   const darkBackground = '#0f172a';
-  const darkCardBackground = '#090e1a';
+  // const darkCardBackground = '#090e1a';
   const darkBorderColor = '#334155';
   const darkTextColor = '#f8fafc';
   const darkSubtitleColor = '#AAAAAA';
@@ -72,7 +64,7 @@ const TextResultScreen = () => {
 
   // Get the appropriate colors based on the theme
   const backgroundColor = theme === 'light' ? '#f8fafc' : darkBackground;
-  const cardBackground = theme === 'light' ? '#ffffff' : darkCardBackground;
+  // const cardBackground = theme === 'light' ? '#ffffff' : darkCardBackground;
   const borderColor = theme === 'light' ? '#e2e8f0' : darkBorderColor;
   const textColor = theme === 'light' ? '#0f172a' : darkTextColor;
   const subtitleColor = theme === 'light' ? '#64748b' : darkSubtitleColor;
@@ -90,7 +82,6 @@ const TextResultScreen = () => {
         const textResult = await submitText(resultText);
 
         if (textResult) {
-          
           setIsClaim(textResult.isClaim);
 
           console.log(textResult.isClaim);
@@ -98,7 +89,7 @@ const TextResultScreen = () => {
             setIsModalVisible(true);
           } else {
             setIsModalVisible(false);
-            setContentLoading(false);
+            // setContentLoading(false);
             setNews(textResult.matchedArticles);
             setText(textResult.text);
             setPrediction(textResult.prediction);
@@ -115,9 +106,7 @@ const TextResultScreen = () => {
             await insertFactCheck(factCheckData);
             console.log('✅ Fact check inserted.');
           }
-          
 
-         
         } else {
           console.warn('⚠️ No data returned from text processing!');
         }
@@ -125,15 +114,13 @@ const TextResultScreen = () => {
         console.error('❌ Error processing text:', error);
       } finally {
         setLoading(false);
-        setContentLoading(false);
-        setResultLoading(false);
+        // setContentLoading(false);
+        // setResultLoading(false);
       }
     };
     processText();
   }, [resultText]);
-  
-    
-  
+
   return isClaim ? (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <StatusBar

@@ -2,16 +2,9 @@
 
 import React from 'react';
 import { useState, createContext } from 'react';
-import {
-  ScrollView,
-  View,
-  Text,
-} from 'react-native';
+
 import UploadScreen from './src/components/ImagePickerExample';
-import FloatingButton from './src/components/FloatingButton';
 import Home from './src/components/Home';
-import SettingScreen from './src/components/SettingScreen';
-import Gauge from './src/components/Gauge';
 import AssistantScreen from './src/components/AssistantScreen';
 import TextScreen from './src/components/TextScreen';
 import ResultScreen from './src/screens/ResultScreen';

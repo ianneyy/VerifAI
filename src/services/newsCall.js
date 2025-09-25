@@ -1,7 +1,8 @@
 // const SERVER_URL = 'http://192.168.215.193:5001';
 // const SERVER_URL = 'http://192.168.186.193:5001';
   const SERVER_URL = 'http://192.168.1.5:5001';
-
+  const TEXT_URL = 'https://verifai-text-service.onrender.com';
+const IMAGE_URL = 'https://ovx7-image-service.hf.space';
 import {Platform} from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 
@@ -20,7 +21,7 @@ export const submitText = async text => {
   // const SERVER_URL = 'http://192.168.1.7:5001';
 
   try {
-    const response = await fetch(`${SERVER_URL}/text`, {
+    const response = await fetch(`${TEXT_URL}/text`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -62,7 +63,7 @@ export const uploadImage = async imageUri => {
       type: 'image/jpeg',
     });
 
-    const response = await fetch(`${SERVER_URL}/news`, {
+    const response = await fetch(`${IMAGE_URL}/news`, {
       method: 'POST',
       body: formData,
       headers: {

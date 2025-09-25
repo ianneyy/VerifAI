@@ -60,7 +60,6 @@ const InstructionModal = ({ visible, onClose }) => {
             {/* Best practices section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Best practices</Text>
-              
               <View style={styles.practiceCard}>
                 <Text style={styles.practiceTitle}>Recommended</Text>
                 <Text style={styles.practiceItem}>Use high-quality screenshots</Text>

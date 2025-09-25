@@ -8,6 +8,9 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 // Import the ThemeContext from App.tsx
 import { ThemeContext } from '../../App';
 import FloatingButtonModule from './FloatingButtonModule';
+import InstructionModal from './InstructionModal';
+
+
 
 const AssistantScreen = () => {
     // Initialize both states to false
@@ -15,6 +18,7 @@ const AssistantScreen = () => {
     const [isEnabled, setIsEnabled] = useState(false);
     const navigation = useNavigation();
     const { theme } = useContext(ThemeContext);
+   const [modalVisible, setModalVisible] = useState(true);
 
     // Only initialize on first mount
     useEffect(() => {
@@ -118,7 +122,10 @@ const AssistantScreen = () => {
                     <Icon name="help-circle" size={24} color={textColor} />
                 </TouchableOpacity>
             </View>
-
+<InstructionModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
             <View style={styles.content}>
                 <Switch
                     trackColor={{ false: theme === 'light' ? '#e2e8f0' : '#334155', true: '#93c5fd' }}

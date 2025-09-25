@@ -1,4 +1,5 @@
-import React, {useState, useContext, useEffect} from 'react';
+/* eslint-disable react-native/no-inline-styles */
+import React, {useState, useContext} from 'react';
 import Icon from 'react-native-vector-icons/Feather';
 import {
   View,
@@ -12,7 +13,7 @@ import {
   TextInput,
 } from 'react-native';
 import {ThemeContext} from '../../App';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 
 const UrlScreen = () => {
   const {theme} = useContext(ThemeContext);
@@ -23,18 +24,18 @@ const UrlScreen = () => {
   // const [prediction, setPrediction] = useState('');
   // const [news, setNews] = useState([]);
 
-  const darkBackground = '#0f172a';
-  const darkCardBackground = '#090e1a';
-  const darkBorderColor = '#334155';
-  const darkTextColor = '#f8fafc';
-  const darkSubtitleColor = '#AAAAAA';
+  // const darkBackground = '#0f172a';
+  // const darkCardBackground = '#090e1a';
+  // const darkBorderColor = '#334155';
+  // const darkTextColor = '#f8fafc';
+  // const darkSubtitleColor = '#AAAAAA';
   const accentColor = '#6C63FF';
   const backgroundColor = theme === 'light' ? '#f8fafc' : '#0f172a';
   const textColor = theme === 'light' ? '#0f172a' : '#f8fafc';
   const mutedTextColor = theme === 'light' ? '#64748b' : '#94a3b8';
   const borderColor = theme === 'light' ? '#e2e8f0' : '#334155';
-  const cardColor = theme === 'light' ? '#ffffff' : '#1e293b';
-  const primaryColor = '#1e3a8a'; // Navy blue - consistent with the app
+  // const cardColor = theme === 'light' ? '#ffffff' : '#1e293b';
+  // const primaryColor = '#1e3a8a'; 
 
   const submit = async () => {
     try {
@@ -76,7 +77,7 @@ const UrlScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
       <Text style={
-        {color: textColor, 
+        {color: textColor,
           marginLeft: 24,
           fontWeight:'bold',
           marginBottom: 5,
