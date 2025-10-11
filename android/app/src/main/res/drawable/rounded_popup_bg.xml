@@ -7,6 +7,6 @@
     <corners android:radius="20dp" /> <!-- Adjust radius as needed -->
 
     <!-- Optional stroke if you want a border -->
-    <!-- <stroke android:width="2dp" android:color="#ffffff" /> -->
+    <stroke android:width="2dp" android:color="#9ca3af" />
 
 </shape>

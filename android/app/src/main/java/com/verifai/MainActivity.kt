@@ -17,12 +17,15 @@ import android.Manifest
 import androidx.core.content.ContextCompat
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
+import com.zoontek.rnbootsplash.RNBootSplash
+
 
 class MainActivity : ReactActivity() {
 
     private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        RNBootSplash.init(this, R.style.BootTheme)
         super.onCreate(savedInstanceState)
         Log.d("MainActivity", "onCreate called")
 

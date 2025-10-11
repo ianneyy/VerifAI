@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 
 import React from 'react';
-import { useState, createContext } from 'react';
+import { useState, createContext,useEffect } from 'react';
 
 import UploadScreen from './src/components/ImagePickerExample';
 import Home from './src/components/Home';
@@ -15,7 +15,7 @@ import { useColorScheme } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import UrlResultScreen from './src/screens/UrlResultScreen';
-
+import BootSplash from "react-native-bootsplash";
 
 // const ResultScreen = () => null;
 export const ThemeContext = createContext({
@@ -35,7 +35,16 @@ export const ThemeProvider = ({ children }) => {
 const Stack = createNativeStackNavigator();
 
 function App() {
+  useEffect(() => {
+    const init = async () => {
+      // …do multiple sync or async tasks
+    };
 
+    init().finally(async () => {
+      await BootSplash.hide({ fade: true });
+      console.log("BootSplash has been hidden successfully");
+    });
+  }, []);
   return (
     <ThemeProvider>
       <NavigationContainer>

@@ -678,9 +678,11 @@ class FloatingButtonService : Service() {
     }
     private fun getServerUrl(): String {
         return if (isEmulator()) {
-            "https://ovx7-image-service.hf.space"
+            // "http://10.0.2.2:5001"
+            "https://ovx7-verifai.hf.space"
         } else {
-            "https://ovx7-image-service.hf.space" // <-- your laptop's real IP address
+            // "http://10.114.160.193:5001" // <-- your laptop's real IP address
+            "https://ovx7-verifai.hf.space"
         }
     }
     fun isEmulator(): Boolean {

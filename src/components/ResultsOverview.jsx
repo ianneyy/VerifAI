@@ -197,7 +197,7 @@ const ResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {prediction === 'Credible' ? '+20%' : '+0%'}
+                  {prediction === 'Credible' ? '+19%' : '+0%'}
                 </Text>
               </View>
               <Text
@@ -349,7 +349,7 @@ const ResultsOverview = ({
                   ]}>
                   {faceRecognition.trim().toLowerCase() ===
                     'no face detected' || matchedPerson
-                    ? '+20%'
+                    ? '+9%'
                     : '+0%'}
                 </Text>
               </View>
