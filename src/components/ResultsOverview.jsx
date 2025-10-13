@@ -54,8 +54,7 @@ const ResultsOverview = ({
           <TouchableOpacity
             style={[
               styles.button,
-              activeContent === 'content1' && styles.active,
-              {borderTopLeftRadius: 6, borderBottomLeftRadius: 6},
+              activeContent === 'content1' && styles.active
             ]}
             onPress={() => setActiveContent('content1')}>
             <Text
@@ -466,10 +465,12 @@ export default ResultsOverview;
 
 const styles = StyleSheet.create({
   activeText: {
-    color: '#fff',
+    color: '#6C63FF',
   },
   active: {
-    backgroundColor: '#007AFF', // Blue background
+    // backgroundColor: '#007AFF', // Blue background
+    borderBottomWidth: 3, // ✅ border thickness
+    borderBottomColor: '#6C63FF', // ✅ your accent color
   },
   panel: {
     flexDirection: 'row',
@@ -477,7 +478,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 16,
     marginTop: 24,
-  
   },
   buttonContainer: {
     alignItems: 'center',
@@ -488,12 +488,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     height: 40,
+    borderBottomWidth: 2, // ✅ border thickness
+    borderBottomColor: '#edebebff',
     // borderRadius: 6,
     width: '100%',
     alignItems: 'center',
   },
   buttonText: {
-    color: '#007AFF',
+    color: '#858585ff',
     fontWeight: 'bold',
   },
   content: {

@@ -52,7 +52,6 @@ const TextResultsOverview = ({
             style={[
               styles.button,
               activeContent === 'content1' && styles.active,
-              {borderTopLeftRadius: 6, borderBottomLeftRadius: 6},
             ]}
             onPress={() => setActiveContent('content1')}>
             <Text
@@ -126,7 +125,7 @@ const TextResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {prediction === 'Credible' ? '+50%' : '+0%'}
+                  {prediction === 'Credible' ? '+10%' : '+0%'}
                 </Text>
               </View>
               <Text
@@ -304,10 +303,11 @@ export default TextResultsOverview;
 
 const styles = StyleSheet.create({
   activeText: {
-    color: '#fff',
+    color: '#6C63FF',
   },
   active: {
-    backgroundColor: '#007AFF', // Blue background
+    borderBottomWidth: 3, // ✅ border thickness
+    borderBottomColor: '#6C63FF', // ✅ your accent color
   },
   panel: {
     flexDirection: 'row',
@@ -315,7 +315,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 16,
     marginTop: 24,
-  
   },
   buttonContainer: {
     alignItems: 'center',
@@ -326,12 +325,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     height: 40,
-    // borderRadius: 6,
     width: '100%',
     alignItems: 'center',
+    borderBottomWidth: 2, // ✅ border thickness
+    borderBottomColor: '#edebebff',
   },
   buttonText: {
-    color: '#007AFF',
+    color: '#858585ff',
     fontWeight: 'bold',
   },
   content: {

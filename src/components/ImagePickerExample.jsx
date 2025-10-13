@@ -1,24 +1,27 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useContext } from 'react';
+import React, {useState, useContext, useEffect} from 'react';
 import {
-  View, Text, Image, TouchableOpacity
-  , ScrollView, StyleSheet,
-  SafeAreaView, StatusBar, Alert,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { ThemeContext } from '../../App';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {ThemeContext} from '../../App';
 import InstructionModal from './InstructionModal';
 
-
 const ImagePickerExample = () => {
-   const [modalVisible, setModalVisible] = useState(true);
   const navigation = useNavigation();
   const [imageUri, setImageUri] = useState(null);
-  const { theme } = useContext(ThemeContext);
-
+  const {theme} = useContext(ThemeContext);
 
   const darkBackground = '#0f172a';
   const darkCardBackground = '#090e1a';
@@ -36,7 +39,6 @@ const ImagePickerExample = () => {
   const placeholderTextColor = theme === 'light' ? '#94a3b8' : '#777777';
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
 
-
   // Function to pick an image
   const pickImage = async () => {
     const result = await launchImageLibrary({
@@ -53,12 +55,16 @@ const ImagePickerExample = () => {
     setImageUri(uri);
 
     // Navigate to ResultScreen with the image URI
-    navigation.navigate('ResultScreen', { imageUri: uri });
+    // navigation.navigate('ResultScreen', {imageUri: uri});
   };
+  const handleSubmit = () => {
+    if (!imageUri) {
+      Alert.alert('No image selected', 'Please choose an image first.');
+      return;
+    }
 
-
-
- 
+    navigation.navigate('ResultScreen', {imageUri});
+  };
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
@@ -74,13 +80,13 @@ const ImagePickerExample = () => {
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: textColor}]}>
-          VerifAI Image Scan
+          VerifAI Image
         </Text>
         <TouchableOpacity
           style={styles.helpButton}
           onPress={() =>
             Alert.alert(
-              'About VerifAI Image Scan',
+              'About VerifAI Image',
               'The VerifAI Image Scan helps you verify information by extracting text from uploaded image providing hassle-free verification',
               [{text: 'Got it'}],
             )
@@ -88,39 +94,67 @@ const ImagePickerExample = () => {
           <Icon name="help-circle" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-      <InstructionModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      />
+     
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity
-          style={[styles.pickButton, {backgroundColor: accentColor}]}
-          onPress={pickImage}
-          activeOpacity={0.8}>
-          <Text style={styles.pickButtonText}>Select Image</Text>
-        </TouchableOpacity>
-
+        <View style={{alignItems: 'center', justifyContent: 'center', flex: 1}}>
+          {/* <Icon
+            name="upload"
+            size={64}
+            color="#6C63FF"
+            style={{marginBottom: 36}}
+          /> */}
+          {/* <ImageUp color="#6C63FF" size={98} style={{marginBottom: 36}} /> */}
+        </View>
         {imageUri ? (
           <View
             style={[styles.imageContainer, {backgroundColor: cardBackground}]}>
             <Image source={{uri: imageUri}} style={styles.image} />
           </View>
         ) : (
-          <View
-            style={[
-              styles.placeholderContainer,
-              {backgroundColor: cardBackground, borderColor},
-            ]}>
-            <Icon name="image" size={48} color={placeholderTextColor} />
-            <Text
-              style={[styles.placeholderText, {color: placeholderTextColor}]}>
-              No image selected
-            </Text>
-          </View>
+          <Image
+            source={require('../assets/images/illustrations/image.png')}
+            style={styles.image}
+          />
+          // <View
+          //   style={[
+          //     styles.placeholderContainer,
+          //     {backgroundColor: cardBackground, borderColor},
+          //   ]}>
+          //   <Icon name="image" size={48} color={placeholderTextColor} />
+          //   <Text
+          //     style={[styles.placeholderText, {color: placeholderTextColor}]}>
+          //     No image selected
+          //   </Text>
+          // </View>
         )}
-
-
+        <TouchableOpacity
+          style={[
+            styles.pickButton,
+            {
+              backgroundColor: 'transparent', // off-white gray background
+              borderColor: '#6C63FF', // neutral gray border
+              borderWidth: 1,
+              elevation: 0, // 🔹 removes Android shadow
+            },
+          ]}
+          onPress={pickImage}
+          activeOpacity={0.8}>
+          <Text style={[styles.pickButtonText, {color: '#6C63FF'}]}>
+            Select Image
+          </Text>
+        </TouchableOpacity>
+        {imageUri && (
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              {backgroundColor: '#6C63FF', elevation: 0},
+            ]}
+            onPress={handleSubmit}
+            activeOpacity={0.8}>
+            <Text style={styles.pickButtonText}>Verify</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -130,18 +164,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
- 
+  submitButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 50,
+    marginHorizontal: 20,
+    marginTop: 10,
+    alignItems: 'center',
+    elevation: 3,
+  },
 
-  
-  
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-        paddingVertical: 12,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-
   },
   backButton: {
     padding: 8,
@@ -169,7 +208,7 @@ const styles = StyleSheet.create({
   pickButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
     marginHorizontal: 20,
     alignItems: 'center',
     elevation: 3,
@@ -228,8 +267,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
   },
-  
-  
 });
 
 export default ImagePickerExample;

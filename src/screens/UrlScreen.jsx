@@ -9,8 +9,9 @@ import {
   SafeAreaView,
   Alert,
   StatusBar,
-  ScrollView,
+  Image,
   TextInput,
+  Modal,
 } from 'react-native';
 import {ThemeContext} from '../../App';
 import {useNavigation} from '@react-navigation/native';
@@ -18,34 +19,29 @@ import {useNavigation} from '@react-navigation/native';
 const UrlScreen = () => {
   const {theme} = useContext(ThemeContext);
   const navigation = useNavigation();
-  // const [resultText, setResultText] = useState('');
+  const [invalidUrlModalVisible, setInvalidUrlModalVisible] = useState(false);
   const [newsText, setNewsText] = useState('');
-  // const [text, setText] = useState('');
-  // const [prediction, setPrediction] = useState('');
-  // const [news, setNews] = useState([]);
-
-  // const darkBackground = '#0f172a';
-  // const darkCardBackground = '#090e1a';
-  // const darkBorderColor = '#334155';
-  // const darkTextColor = '#f8fafc';
-  // const darkSubtitleColor = '#AAAAAA';
+ 
   const accentColor = '#6C63FF';
   const backgroundColor = theme === 'light' ? '#f8fafc' : '#0f172a';
   const textColor = theme === 'light' ? '#0f172a' : '#f8fafc';
   const mutedTextColor = theme === 'light' ? '#64748b' : '#94a3b8';
   const borderColor = theme === 'light' ? '#e2e8f0' : '#334155';
-  // const cardColor = theme === 'light' ? '#ffffff' : '#1e293b';
-  // const primaryColor = '#1e3a8a'; 
 
   const submit = async () => {
     try {
-      //    const result = await submitTextToApi(newsText);
-
+      const urlPattern =
+        /^(https?:\/\/)([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
+      if (!urlPattern.test(newsText)) {
+       setInvalidUrlModalVisible(true);
+        return;
+      }
       navigation.navigate('UrlResultScreen', {resultUrl: newsText});
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
+
   return (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <StatusBar
@@ -60,7 +56,7 @@ const UrlScreen = () => {
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: textColor}]}>
-          URL Verification
+          VerifAI URL
         </Text>
         <TouchableOpacity
           style={styles.helpButton}
@@ -74,46 +70,131 @@ const UrlScreen = () => {
           <Icon name="help-circle" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
 
-      <Text style={
-        {color: textColor,
-          marginLeft: 24,
-          fontWeight:'bold',
-          marginBottom: 5,
-        }
-        }>
-      Enter the news URL you want to verify
-        </Text>
+      <View style={{alignItems: 'center', flex: 1}}>
+        <View>
+          {/* <Globe color="#6C63FF" size={98} style={{marginBottom: 36}} /> */}
+          <Image
+            source={require('../assets/images/illustrations/url.png')}
+            style={styles.image}
+          />
+        </View>
+        {/* <Text
+          style={{
+            color: textColor,
+            marginLeft: 24,
+            fontWeight: 'bold',
+            marginBottom: 5,
+          }}>
+          Enter the news URL you want to verify
+        </Text> */}
         <TextInput
           style={[
             styles.input,
             {
               backgroundColor: backgroundColor,
-              borderColor: borderColor,
+              borderColor: '#6C63FF',
               color: textColor,
+              width: '90%',
+              alignSelf: 'center',
             },
           ]}
-          placeholder="https://"
+          placeholder="Enter or paste a URL"
           multiline
           placeholderTextColor={mutedTextColor}
           value={newsText}
           onChangeText={setNewsText}
         />
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: accentColor}]}
+          style={[
+            styles.button,
+            {
+              backgroundColor: accentColor,
+              width: '90%', // 🔹 full-width button
+              alignSelf: 'center',
+              elevation: 0,
+            },
+          ]}
           activeOpacity={0.8}
           onPress={submit}>
-          <Text style={styles.buttonText}>Verify News</Text>
+          <Text style={styles.buttonText}>Verify</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={invalidUrlModalVisible}
+        onRequestClose={() => setInvalidUrlModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, {backgroundColor}]}>
+            <Text style={[styles.modalTitle, {color: textColor}]}>
+              Invalid URL
+            </Text>
+            <Text style={[styles.modalMessage, {color: mutedTextColor}]}>
+              Please enter a valid URL starting with http:// or https://
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.modalButton,
+                {
+                  backgroundColor: '#6C63FF',
+                  width: '100%',
+                  alignSelf: 'center',
+                  justifyContent: 'center', // ✅ centers vertically
+                  alignItems: 'center',
+                },
+              ]}
+              onPress={() => setInvalidUrlModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '80%',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    
+    borderRadius: 50,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+
   container: {
     flex: 1,
+  },
+  image: {
+    width: 300,
+    height: 300,
+    resizeMode: 'contain',
   },
   scrollContent: {
     paddingTop: 20,
@@ -122,7 +203,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
     marginHorizontal: 20,
     alignItems: 'center',
     elevation: 3,
@@ -137,7 +218,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 10,
 
-  
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,

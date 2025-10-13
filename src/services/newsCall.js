@@ -44,7 +44,7 @@ export const submitText = async text => {
         matchedArticles: data.matched_articles || [],
         prediction: data.prediction || '',
         score: data.score || 0,
-        matchedArticleScore: data.total_ave_rounded || 0,
+        matchedArticleScore: data.matched_article_score || 0,
       };
     }
   } catch (error) {

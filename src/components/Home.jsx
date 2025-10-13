@@ -1,12 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
 'use client';
 
-import { useContext } from 'react';
+import {useContext, useState, useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 // Import the ThemeContext from App.tsx
 import { ThemeContext } from '../../App';
+import InstructionModal from './InstructionModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mode toggle component
 const ModeToggle = () => {
@@ -37,10 +39,8 @@ const MenuItem = ({ icon, title, description, onPress }) => {
       ]}
       onPress={onPress}
     >
-      <Icon name={icon} size={20} 
-      
+      <Icon name={icon} size={20}
       color={theme === 'light' ? '#1e3a8a' : '#6C63FF'}
-      
       style={styles.menuIcon} />
       <View style={styles.menuTextContainer}>
         <Text style={[styles.menuTitle, { color: theme === 'light' ? '#0f172a' : '#f8fafc' }]}>{title}</Text>
@@ -55,7 +55,24 @@ const MenuItem = ({ icon, title, description, onPress }) => {
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { theme } = useContext(ThemeContext);
+  const [modalVisible, setModalVisible] = useState(false);
+ useEffect(() => {
+   const checkFirstLaunch = async () => {
+     try {
+       const hasLaunched = await AsyncStorage.getItem('hasLaunchedBefore');
 
+       if (!hasLaunched) {
+         // First time the app is opened
+         setModalVisible(true);
+         await AsyncStorage.setItem('hasLaunchedBefore', 'true');
+       }
+     } catch (error) {
+       console.log('Error checking first launch:', error);
+     }
+   };
+
+   checkFirstLaunch();
+ }, []);
   return (
     <SafeAreaView
       style={[
@@ -65,15 +82,28 @@ const HomeScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={[styles.title,  {
-      color: theme === 'light' ? '#1e3a8a' : '#6C63FF', // light blue when dark
-    }]}>VerifAI</Text>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme === 'light' ? '#1e3a8a' : '#6C63FF', // light blue when dark
+                },
+              ]}>
+              VerifAI
+            </Text>
             <ModeToggle />
           </View>
-
+          <InstructionModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+          />
           <View style={styles.heroSection}>
             <View style={styles.iconCircle}>
-              <Icon name="check-circle" size={48} color={theme === 'light' ? '#1e3a8a' : '#6C63FF'} />
+              <Icon
+                name="check-circle"
+                size={48}
+                color={theme === 'light' ? '#1e3a8a' : '#6C63FF'}
+              />
             </View>
             <Text
               style={[

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useState, useContext, useEffect} from 'react';
 import Icon from 'react-native-vector-icons/Feather';
 import {
@@ -8,38 +9,42 @@ import {
   SafeAreaView,
   Alert,
   StatusBar,
-  ScrollView,
   TextInput,
+  Image,
+  Modal,
 } from 'react-native';
 import {ThemeContext} from '../../App';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 
 const TextScreen = () => {
   const {theme} = useContext(ThemeContext);
   const navigation = useNavigation();
   // const [resultText, setResultText] = useState('');
   const [newsText, setNewsText] = useState('');
-  // const [text, setText] = useState('');
-  // const [prediction, setPrediction] = useState('');
-  // const [news, setNews] = useState([]);
+  const [invalidTextModalVisible, setInvalidTextModalVisible] = useState(false);
 
-  const darkBackground = '#0f172a';
-  const darkCardBackground = '#090e1a';
-  const darkBorderColor = '#334155';
-  const darkTextColor = '#f8fafc';
-  const darkSubtitleColor = '#AAAAAA';
+
   const accentColor = '#6C63FF';
   const backgroundColor = theme === 'light' ? '#f8fafc' : '#0f172a';
   const textColor = theme === 'light' ? '#0f172a' : '#f8fafc';
   const mutedTextColor = theme === 'light' ? '#64748b' : '#94a3b8';
   const borderColor = theme === 'light' ? '#e2e8f0' : '#334155';
-  const cardColor = theme === 'light' ? '#ffffff' : '#1e293b';
-  const primaryColor = '#1e3a8a'; // Navy blue - consistent with the app
 
   const submit = async () => {
     try {
       //    const result = await submitTextToApi(newsText);
+      const cleanedText = newsText.replace(/[^a-zA-Z0-9\s.,!?'"()-]/g, '');
 
+      // Optional: prevent too much gibberish (e.g., long random letters)
+      const words = cleanedText.trim().split(/\s+/);
+      const hasVowel = /[aeiouAEIOU]/.test(cleanedText); // must have vowels
+      const isTooRandom = words.length === 1 && words[0].length > 20; // avoid long gibberish
+       const isTooShort = cleanedText.trim().length < 10;
+
+      if (!hasVowel || isTooRandom || isTooShort) {
+       setInvalidTextModalVisible(true);
+        return;
+      }
       navigation.navigate('TextResultScreen', {resultText: newsText});
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -73,37 +78,120 @@ const TextScreen = () => {
           <Icon name="help-circle" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={{alignItems: 'center', flex: 1}}>
+        <View>
+          {/* <TextSearch color="#94a3b8" size={98} style={{marginBottom: 36}} /> */}
+          <Image
+            source={require('../assets/images/illustrations/text.png')}
+            style={styles.image}
+          />
+        </View>
         <TextInput
           style={[
             styles.input,
             {
               backgroundColor: backgroundColor,
-              borderColor: borderColor,
+              borderColor: '#6C63FF',
               color: textColor,
+              width: '90%',
+              alignSelf: 'center',
             },
           ]}
-          placeholder="Paste news text here..."
+          placeholder="Enter or paste the news text you want to verify"
           multiline
           placeholderTextColor={mutedTextColor}
           value={newsText}
           onChangeText={setNewsText}
         />
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: accentColor}]}
+          style={[
+            styles.button,
+            {
+              backgroundColor: accentColor,
+              width: '90%',
+              alignSelf: 'center',
+              elevation: 0,
+            },
+          ]}
           activeOpacity={0.8}
           onPress={submit}>
-          <Text style={styles.buttonText}>Verify News</Text>
+          <Text style={styles.buttonText}>Verify</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={invalidTextModalVisible}
+        onRequestClose={() => setInvalidTextModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, {backgroundColor}]}>
+            <Text style={[styles.modalTitle, {color: textColor}]}>
+              Invalid Text
+            </Text>
+            <Text style={[styles.modalMessage, {color: mutedTextColor}]}>
+              Please enter a valid sentence. Avoid random characters or
+              gibberish.
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.modalButton,
+                {
+                  backgroundColor: '#6C63FF',
+                  width: '100%',
+                  alignSelf: 'center',
+                  justifyContent: 'center', // ✅ centers vertically
+                  alignItems: 'center',
+                },
+              ]}
+              onPress={() => setInvalidTextModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+     
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '80%',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    paddingVertical: 10,
+
+    borderRadius: 50,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+
   container: {
     flex: 1,
   },
+  image: {width: 300, height: 300, resizeMode: 'contain'},
   scrollContent: {
     paddingTop: 20,
     paddingBottom: 30,
@@ -111,7 +199,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 50,
     marginHorizontal: 20,
     alignItems: 'center',
     elevation: 3,
@@ -126,7 +214,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 10,
 
-    height: 200,
+    // height: 200,
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
