@@ -3,7 +3,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
-import { uploadImage } from '../services/newsCall';
+import {uploadImageWithProgress} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import SQLite from 'react-native-sqlite-storage';
 
@@ -15,7 +15,6 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
- 
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Gauge from '../components/Gauge';
@@ -23,23 +22,17 @@ import Gauge from '../components/Gauge';
 import IssueModal from '../components/IssueModal';
 import ExtractedText from '../components/ExtractedText';
 import ResultsOverview from '../components/ResultsOverview';
-import Loading from '../components/Loading';
+import VerifyProgress from '../components/TextLoading';
 import ImageUploadHelp from '../components/ImageUploadHelp';
-import {
-  initDB,
-  insertFactCheck,
-} from '../js/database';
-
+import {initDB, insertFactCheck} from '../js/database';
 
 const ResultScreen = () => {
   const route = useRoute();
-  const { imageUri } = route.params;
+  const {imageUri} = route.params;
   const navigation = useNavigation();
-  const { theme } = useContext(ThemeContext);
+  const {theme} = useContext(ThemeContext);
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [contentLoading, setContentLoading] = useState(false);
-  const [resultLoading, setResultLoading] = useState(false);
   const [cleanText, setCleanText] = useState('');
   const [articleCount, setArticleCount] = useState(0);
   const [sourceScore, setSourceScore] = useState(0);
@@ -55,7 +48,8 @@ const ResultScreen = () => {
   const [issueModalReason1, setIssueModalReason1] = useState('');
   const [issueModalReason2, setIssueModalReason2] = useState('');
   const [isHelpVisible, setHelpVisible] = useState(false);
-
+  const [progress, setProgress] = useState(0);
+  const [message, setMessage] = useState('');
 
   const darkBackground = '#0f172a';
   const darkCardBackground = '#090e1a';
@@ -73,7 +67,6 @@ const ResultScreen = () => {
   const placeholderTextColor = theme === 'light' ? '#94a3b8' : '#777777';
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
 
-
   useEffect(() => {
     const processImage = async () => {
       try {
@@ -83,149 +76,161 @@ const ResultScreen = () => {
         await initDB();
 
         setLoading(true);
-        const extractedData = await uploadImage(imageUri);
-        if (extractedData) {
-          setContentLoading(false);
-          if (extractedData.extracted_text) {
-            setNews(extractedData.matchedArticles);
-            setfaceRecognition(extractedData.face_recognition.artist);
-            setCleanText(extractedData.cleanedText);
-            setArticleCount(extractedData.matchedArticles.length);
-            // setsourceCredible(extractedData.sourceCredibility);
-            setPrediction(extractedData.prediction);
-            setGauge(extractedData.score);
-            setSourceName(extractedData.sourceName);
-            setSourceScore(extractedData.sourceScore);
-            setMatchedPerson(extractedData.matchedPerson);
-            // setMatchedArticleScore(extractedData.matchedArticleScore);
+        setTimeout(() => {
+          uploadImageWithProgress(
+            imageUri,
+            (p, msg) => {
+              setProgress(p);
+              setMessage(msg);
+            },
+            async extractedData => {
+              if (extractedData) {
+                setLoading(false);
+                if (extractedData.extracted_text) {
+                  setNews(extractedData.matched_articles);
+                  setfaceRecognition(extractedData.face_recognition.artist);
+                  setCleanText(extractedData.cleaned_text);
+                  setArticleCount(extractedData.matched_articles.length);
+                  // setsourceCredible(extractedData.sourceCredibility);
+                  setPrediction(extractedData.prediction);
+                  setGauge(extractedData.score);
+                  setSourceName(extractedData.source_name);
+                  setSourceScore(extractedData.source_score);
+                  setMatchedPerson(extractedData.match_person);
+                  // setMatchedArticleScore(extractedData.matchedArticleScore);
 
-            const factCheckData = {
-              claim: extractedData.cleanedText,
-              source: extractedData.sourceName,
-              verdict: extractedData.score,
-              source_score: extractedData.sourceScore,
-              writing_style: extractedData.prediction,
-              matched_article: extractedData.matchedArticleScore,
-              matched_person: extractedData.matchedPerson,
-              face_recognition: extractedData.face_recognition.artist,
-              method: 'Image Upload',
-            };
+                  const factCheckData = {
+                    claim: extractedData.cleaned_text,
+                    source: extractedData.source_name,
+                    verdict: extractedData.score,
+                    source_score: extractedData.source_score,
+                    writing_style: extractedData.prediction,
+                    matched_article: extractedData.matchedArticleScore,
+                    matched_person: extractedData.match_person,
+                    face_recognition: extractedData.face_recognition.artist,
+                    method: 'Image Upload',
+                  };
 
-            console.log('📝 Inserting fact check:', factCheckData);
-            await insertFactCheck(factCheckData);
-            console.log('✅ Fact check inserted.');
+                  console.log('📝 Inserting fact check:', factCheckData);
+                  await insertFactCheck(factCheckData);
+                  console.log('✅ Fact check inserted.');
 
-
-            if (!extractedData.matchedArticles.length) {
-              console.warn('⚠️ No matched articles found!');
-            }
-          } else {
-            console.warn('⚠️ No text detected in image!');
-          }
-        } else {
-          console.warn('⚠️ No data returned from image processing!');
-        }
+                  if (!extractedData.matchedArticles.length) {
+                    console.warn('⚠️ No matched articles found!');
+                  }
+                } else {
+                  console.warn('⚠️ No text detected in image!');
+                }
+              } else {
+                console.warn('⚠️ No data returned from image processing!');
+              }
+              setLoading(false);
+            },
+            err => {
+              console.error('❌ SSE Error processing URL:', err);
+              setLoading(false);
+            },
+          );
+        }, 50);
       } catch (error) {
         console.error('❌ Error processing image:', error);
-      } finally {
         setLoading(false);
-        setContentLoading(false);
-        setResultLoading(false);
       }
     };
 
     processImage();
   }, [imageUri]);
 
+  return (
+    <SafeAreaView style={[styles.container, {backgroundColor}]}>
+      <StatusBar
+        barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
+        backgroundColor={backgroundColor}
+      />
 
+      <View style={[styles.header, {borderBottomColor: borderColor}]}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={24} color={textColor} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, {color: textColor}]}>Result</Text>
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={() => setHelpVisible(true)}>
+          <Icon name="help-circle" size={24} color={textColor} />
+        </TouchableOpacity>
+      </View>
+      <ImageUploadHelp
+        visible={isHelpVisible}
+        onClose={() => setHelpVisible(false)}
+      />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {loading ? (
+          <View
+            style={{
+              marginTop: 200,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <VerifyProgress
+              message={message}
+              progress={progress}
+              textColor={textColor}
+              subtitleColor={subtitleColor}
+            />
+          </View>
+        ) : (
+          <>
+            {/* EXTRACTED TEXT */}
 
+            <ExtractedText
+              cleanText={cleanText}
+              SourceName={SourceName}
+              textColor={textColor}
+              recognizedTextColor={recognizedTextColor}
+            />
 
-
-
-    return (
-      <SafeAreaView style={[styles.container, {backgroundColor}]}>
-        <StatusBar
-          barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
-          backgroundColor={backgroundColor}
-        />
-
-        <View style={[styles.header, {borderBottomColor: borderColor}]}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={24} color={textColor} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, {color: textColor}]}>Result</Text>
-          <TouchableOpacity
-            style={styles.helpButton}
-            onPress={() => setHelpVisible(true)}>
-            <Icon name="help-circle" size={24} color={textColor} />
-          </TouchableOpacity>
-        </View>
-        <ImageUploadHelp
-          visible={isHelpVisible}
-          onClose={() => setHelpVisible(false)}
-        />
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {loading ? (
-            <View style={{marginTop: 30}}>
-              <Loading
-                accentColor={accentColor}
-                subtitleColor={subtitleColor}
-              />
+            {/* GAUGE */}
+            <View style={styles.textContainer}>
+              <Gauge confidence={gauge} textColor={recognizedTextColor} />
             </View>
-          ) : (
-            <>
-              {/* EXTRACTED TEXT */}
 
-              <ExtractedText
-                cleanText={cleanText}
-                SourceName={SourceName}
-                textColor={textColor}
-                recognizedTextColor={recognizedTextColor}
-              />
-
-              {/* GAUGE */}
-              <View style={styles.textContainer}>
-                <Gauge confidence={gauge} textColor={recognizedTextColor} />
-              </View>
-
-              {/* PANEL RESULT OVERVIEW AND RELATED NEWS */}
-              <ResultsOverview
-                activeContent={activeContent}
-                setActiveContent={setActiveContent}
-                sourceScore={sourceScore}
-                prediction={prediction}
-                matchedPerson={matchedPerson}
-                faceRecognition={faceRecognition}
-                loading={loading}
-                accentColor={accentColor}
-                subtitleColor={subtitleColor}
-                placeholderTextColor={placeholderTextColor}
-                textColor={textColor}
-                theme={theme}
-                cleanText={cleanText}
-                news={news}
-                setIssueModalTitle={setIssueModalTitle}
-                setIssueModalMessage={setIssueModalMessage}
-                setIssueModalReason1={setIssueModalReason1}
-                setIssueModalReason2={setIssueModalReason2}
-                setIssueModalVisible={setIssueModalVisible}
-              
-              />
-              <IssueModal
-                visible={issueModalVisible}
-                onClose={() => setIssueModalVisible(false)}
-                title={issueModalTitle}
-                message={issueModalMessage}
-                reason1={issueModalReason1}
-                reason2={issueModalReason2}
-              />
-            </>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    );
+            {/* PANEL RESULT OVERVIEW AND RELATED NEWS */}
+            <ResultsOverview
+              activeContent={activeContent}
+              setActiveContent={setActiveContent}
+              sourceScore={sourceScore}
+              prediction={prediction}
+              matchedPerson={matchedPerson}
+              faceRecognition={faceRecognition}
+              loading={loading}
+              accentColor={accentColor}
+              subtitleColor={subtitleColor}
+              placeholderTextColor={placeholderTextColor}
+              textColor={textColor}
+              theme={theme}
+              cleanText={cleanText}
+              news={news}
+              setIssueModalTitle={setIssueModalTitle}
+              setIssueModalMessage={setIssueModalMessage}
+              setIssueModalReason1={setIssueModalReason1}
+              setIssueModalReason2={setIssueModalReason2}
+              setIssueModalVisible={setIssueModalVisible}
+            />
+            <IssueModal
+              visible={issueModalVisible}
+              onClose={() => setIssueModalVisible(false)}
+              title={issueModalTitle}
+              message={issueModalMessage}
+              reason1={issueModalReason1}
+              reason2={issueModalReason2}
+            />
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
 
 export default ResultScreen;

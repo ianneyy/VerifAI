@@ -129,23 +129,29 @@ const HomeScreen = () => {
               onPress={() => navigation.navigate('Assistant')}
             />
             <MenuItem
-              icon="search"
-              title="Check URL"
+              icon="globe"
+              title="VerifAI URL"
               description="Submit a link to verify"
               onPress={() => navigation.navigate('Url')}
             />
+            {/* <MenuItem
+              icon="search"
+              title="URL Result Screen"
+              description="Submit a link to verify"
+              onPress={() => navigation.navigate('UrlResultScreen')}
+            /> */}
 
             <MenuItem
               icon="upload"
-              title="Upload Image"
-              description="Verify in an image"
+              title="VerifAI Image"
+              description="Upload a post screenshot to verify"
               onPress={() => navigation.navigate('Upload')}
             />
 
             <MenuItem
               icon="file-text"
-              title="Text Verification"
-              description="Verify in text content"
+              title="VerifAI Text"
+              description="Enter or paste text to verify"
               onPress={() => navigation.navigate('Text')}
             />
 

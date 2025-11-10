@@ -21,12 +21,12 @@ const Gauge = ({confidence, textColor}) => {
       'Generally credible but with notable issues — such as writing inconsistencies, questionable sources, or contextual mismatches (e.g., personality or topic misalignment).',
   },
   '40-59': {
-    label: 'Proceed with Caution',
+    label: 'Questionable/Needs Verification',
     description:
       'Contains multiple questionable elements or factual inconsistencies that undermine reliability.',
   },
   '0-39': {
-    label: 'Proceed with Maximum Caution',
+    label: 'Low Credibility/Likely False',
     description:
       'Content is confirmed false, misleading, or shows severe disregard for credibility standards.',
   },

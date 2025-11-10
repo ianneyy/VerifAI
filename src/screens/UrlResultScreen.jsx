@@ -3,8 +3,9 @@
 
 import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
-import {submitUrl} from '../services/newsCall';
+import {submitUrlWithProgress} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import VerifyProgress from '../components/TextLoading';
 
 import {
   View,
@@ -14,7 +15,8 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-
+  Image,
+  Linking,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Gauge from '../components/Gauge';
@@ -39,7 +41,6 @@ const UrlResultScreen = () => {
   // const [text, setText] = useState('');
   // const [isClaim, setIsClaim] = useState(true);
 
-
   const [news, setNews] = useState([]);
   // const [matchedArticleScore, setMatchedArticleScore] = useState(0);
   const [prediction, setPrediction] = useState('');
@@ -51,6 +52,13 @@ const UrlResultScreen = () => {
   const [issueModalMessage, setIssueModalMessage] = useState('');
   const [issueModalReason1, setIssueModalReason1] = useState('');
   const [issueModalReason2, setIssueModalReason2] = useState('');
+
+  const [title, setTitle] = useState('');
+  const [url, setUrl] = useState('');
+  const [source, setSource] = useState('');
+  const [date, setDate] = useState('');
+  const [thumbnail, setThumbnail] = useState('');
+
   const [isHelpVisible, setHelpVisible] = useState(false);
   // const [isModalVisible, setIsModalVisible] = useState(false);
   const [faceRecognition, setfaceRecognition] = useState('');
@@ -58,6 +66,8 @@ const UrlResultScreen = () => {
   // const [SourceName, setSourceName] = useState('');
   const [sourceScore, setSourceScore] = useState(0);
   const [matchedPerson, setMatchedPerson] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [message, setMessage] = useState('');
 
 
   const darkBackground = '#0f172a';
@@ -76,39 +86,109 @@ const UrlResultScreen = () => {
   const placeholderTextColor = theme === 'light' ? '#94a3b8' : '#777777';
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
 
-  useEffect(() => {
-    const processUrl = async () => {
-      try {
-        if (!resultUrl) {
-          return;
-        }
-        await initDB();
-        setLoading(true);
-        const urlResult = await submitUrl(resultUrl);
+  // useEffect(() => {
+  //   const processUrl = async () => {
+  //     try {
+  //       if (!resultUrl) {
+  //         return;
+  //       }
+  //       await initDB();
+  //       setLoading(true);
+  //       const urlResult = await submitUrl(resultUrl);
 
-        if (urlResult) {
+  //       if (urlResult) {
+  //         // setIsModalVisible(false);
+  //         // setContentLoading(false);
 
-            // setIsModalVisible(false);
-            // setContentLoading(false);
+  //         setNews(urlResult.matchedArticles);
+  //         // setText(urlResult.text);
+  //         setfaceRecognition(urlResult.face_recognition.artist);
+  //         setCleanText(urlResult.description);
+  //         // setArticleCount(extractedData.matchedArticles.length);
+  //         // setSourceName(urlResult.sourceName);
+  //         setSourceScore(urlResult.sourceScore);
+  //         setMatchedPerson(urlResult.matchedPerson);
+  //         setPrediction(urlResult.prediction);
 
-            setNews(urlResult.matchedArticles);
-            // setText(urlResult.text);
+  //         setSource(urlResult.sourceName);
+  //         setTitle(urlResult.title);
+  //         setUrl(urlResult.url);
+  //         setDate(urlResult.date);
+  //         setThumbnail(urlResult.thumbnail);
+
+  //         setGauge(urlResult.score);
+  //         // setMatchedArticleScore(urlResult.matchedArticleScore);
+  //         const factCheckData = {
+  //           claim: urlResult.description,
+  //           source: urlResult.sourceName,
+  //           verdict: urlResult.score,
+  //           source_score: urlResult.sourceScore,
+  //           writing_style: urlResult.prediction,
+  //           matched_person: urlResult.matchedPerson,
+  //           face_recognition: urlResult.face_recognition.artist,
+  //           method: 'Url Verification',
+  //         };
+
+  //         console.log('📝 Inserting fact check:', factCheckData);
+  //         await insertFactCheck(factCheckData);
+  //         console.log('✅ Fact check inserted.');
+  //       } else {
+  //         console.warn('⚠️ No data returned from text processing!');
+  //       }
+  //     } catch (error) {
+  //       console.error('❌ Error processing text:', error);
+  //     } finally {
+  //       setLoading(false);
+  //       // setContentLoading(false);
+  //       // setResultLoading(false);
+  //     }
+  //   };
+  //   processUrl();
+  // }, [resultUrl]);
+
+useEffect(() => {
+  const processUrl = async () => {
+    try {
+      if (!resultUrl) {
+        return;
+      }
+
+      await initDB();
+      setLoading(true);
+
+      // SSE-based URL submission
+      submitUrlWithProgress(
+        resultUrl,
+        (p, msg) => {
+          setProgress(p);
+          setMessage(msg);
+        },
+        async urlResult => {
+          setLoading(false);
+          if (urlResult) {
+            // Update state with the result
+            setNews(urlResult.matched_articles);
             setfaceRecognition(urlResult.face_recognition.artist);
             setCleanText(urlResult.description);
-            // setArticleCount(extractedData.matchedArticles.length);
-            // setSourceName(urlResult.sourceName);
-            setSourceScore(urlResult.sourceScore);
-            setMatchedPerson(urlResult.matchedPerson);
+            setSourceScore(urlResult.source_score);
+            setMatchedPerson(urlResult.match_person);
             setPrediction(urlResult.prediction);
+
+            setSource(urlResult.source_name);
+            setTitle(urlResult.title);
+            setUrl(urlResult.url);
+            setDate(urlResult.date);
+            setThumbnail(urlResult.thumbnail);
+
             setGauge(urlResult.score);
-            // setMatchedArticleScore(urlResult.matchedArticleScore);
+
             const factCheckData = {
-               claim: urlResult.description,
-              source: urlResult.sourceName,
+              claim: urlResult.description,
+              source: urlResult.source_name,
               verdict: urlResult.score,
-              source_score: urlResult.sourceScore,
+              source_score: urlResult.source_score,
               writing_style: urlResult.prediction,
-              matched_person: urlResult.matchedPerson,
+              matched_person: urlResult.matched_person,
               face_recognition: urlResult.face_recognition.artist,
               method: 'Url Verification',
             };
@@ -116,23 +196,37 @@ const UrlResultScreen = () => {
             console.log('📝 Inserting fact check:', factCheckData);
             await insertFactCheck(factCheckData);
             console.log('✅ Fact check inserted.');
-
           } else {
-          console.warn('⚠️ No data returned from text processing!');
-        }
-      } catch (error) {
-        console.error('❌ Error processing text:', error);
-      } finally {
-        setLoading(false);
-        // setContentLoading(false);
-        // setResultLoading(false);
-      }
-    };
-    processUrl();
-  }, [resultUrl]);
+            console.warn('⚠️ No data returned from URL processing!');
+          }
+
+          
+        },
+        err => {
+          console.error('❌ SSE Error processing URL:', err);
+          setLoading(false);
+        },
+      );
+    } catch (error) {
+      console.error('❌ Error processing URL:', error);
+      setLoading(false);
+    }
+  };
+
+  processUrl();
+}, [resultUrl]);
+
+  useEffect(() => {
+    setCleanText(
+      'This is placeholder text for redesign. This is placeholder text for redesign. This is placeholder text for redesign. This is placeholder text for redesign.',
+    );
+    setGauge(75);
+    setNews([{title: 'Dummy article', url: '#'}]);
+  }, []);
 
 
-  return  (
+
+  return (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <StatusBar
         barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
@@ -142,12 +236,10 @@ const UrlResultScreen = () => {
       <View style={[styles.header, {borderBottomColor: borderColor}]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('Home')}>
+          onPress={() => navigation.navigate('Url')}>
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, {color: textColor}]}>
-          Url Result
-        </Text>
+        <Text style={[styles.headerTitle, {color: textColor}]}>Url Result</Text>
         <TouchableOpacity
           style={styles.helpButton}
           onPress={() => setHelpVisible(true)}>
@@ -155,53 +247,104 @@ const UrlResultScreen = () => {
         </TouchableOpacity>
       </View>
       <ImageUploadHelp
-          visible={isHelpVisible}
-          onClose={() => setHelpVisible(false)}
-        />
+        visible={isHelpVisible}
+        onClose={() => setHelpVisible(false)}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading ? (
           <View
-            style={{
-              marginTop: 300,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Loading accentColor={accentColor} subtitleColor={subtitleColor} />
-          </View>
+                     style={{
+                       marginTop: 200,
+                       justifyContent: 'center',
+                       alignItems: 'center',
+                     }}>
+                     <VerifyProgress
+                       message={message}
+                       progress={progress}
+                       textColor={textColor}
+                       subtitleColor={subtitleColor}
+                     />
+                   </View>
         ) : (
           <>
-            {/* EXTRACTED TEXT */}
+            {/* Preview URL*/}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                if (url) {
+                  Linking.openURL(url).catch(err =>
+                    console.error('Failed to open URL:', err),
+                  );
+                }
+              }}
+              style={{
+                borderWidth: 1,
+                borderRadius: 8,
+                borderColor: '#e5e7eb',
+                marginTop: 12,
+                marginHorizontal: 12,
+              }}>
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{uri: thumbnail}}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={{marginHorizontal: 12, marginVertical: 8}}>
+                <View>
+                  <Text
+                    style={{fontWeight: 'bold', fontSize: 16}}
+                    numberOfLines={1}
+                    ellipsizeMode="tail">
+                    {title || 'No title available'}
+                  </Text>
+                  <ClaimText cleanText={cleanText} textColor={'#71717a'} />
+                </View>
+                <View
+                  style={{
+                    justifyContent: 'space-between',
+                    flexDirection: 'row',
 
-            <ClaimText cleanText={cleanText} textColor={textColor} />
-
+                    marginTop: 6,
+                  }}>
+                  <Text style={{color: '#71717a', fontSize: 12}}>
+                    {source || 'No source available'}
+                  </Text>
+                  <Text style={{color: '#71717a', fontSize: 12}}>
+                    {date || 'No date available'}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
             {/* GAUGE */}
             <View style={styles.textContainer}>
-             <Gauge confidence={gauge} textColor={recognizedTextColor} />
+              <Gauge confidence={gauge} textColor={recognizedTextColor} />
             </View>
 
             {/* PANEL RESULT OVERVIEW AND RELATED NEWS */}
             <ResultsOverview
-                activeContent={activeContent}
-                setActiveContent={setActiveContent}
-                sourceScore={sourceScore}
-                prediction={prediction}
-                matchedPerson={matchedPerson}
-                faceRecognition={faceRecognition}
-                loading={loading}
-                accentColor={accentColor}
-                subtitleColor={subtitleColor}
-                placeholderTextColor={placeholderTextColor}
-                textColor={textColor}
-                theme={theme}
-                cleanText={cleanText}
-                news={news}
-                setIssueModalTitle={setIssueModalTitle}
-                setIssueModalMessage={setIssueModalMessage}
-                setIssueModalReason1={setIssueModalReason1}
-                setIssueModalReason2={setIssueModalReason2}
-                setIssueModalVisible={setIssueModalVisible}
-              />
+              activeContent={activeContent}
+              setActiveContent={setActiveContent}
+              sourceScore={sourceScore}
+              prediction={prediction}
+              matchedPerson={matchedPerson}
+              faceRecognition={faceRecognition}
+              loading={loading}
+              accentColor={accentColor}
+              subtitleColor={subtitleColor}
+              placeholderTextColor={placeholderTextColor}
+              textColor={textColor}
+              theme={theme}
+              cleanText={cleanText}
+              news={news}
+              setIssueModalTitle={setIssueModalTitle}
+              setIssueModalMessage={setIssueModalMessage}
+              setIssueModalReason1={setIssueModalReason1}
+              setIssueModalReason2={setIssueModalReason2}
+              setIssueModalVisible={setIssueModalVisible}
+            />
             <IssueModal
               visible={issueModalVisible}
               onClose={() => setIssueModalVisible(false)}
@@ -220,6 +363,16 @@ export default UrlResultScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  imageContainer: {
+    width: '100%', // full width of parent
+    height: 100, // or any fixed height you want
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: '100%', // fills width of container
+    height: '100%', // fills height of container
   },
   header: {
     flexDirection: 'row',

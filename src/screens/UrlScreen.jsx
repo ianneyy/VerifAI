@@ -10,18 +10,17 @@ import {
   Alert,
   StatusBar,
   Image,
-  TextInput,
+  // TextInput,
   Modal,
 } from 'react-native';
 import {ThemeContext} from '../../App';
 import {useNavigation} from '@react-navigation/native';
-
+import {Button, TextInput} from 'react-native-paper';
 const UrlScreen = () => {
   const {theme} = useContext(ThemeContext);
   const navigation = useNavigation();
   const [invalidUrlModalVisible, setInvalidUrlModalVisible] = useState(false);
   const [newsText, setNewsText] = useState('');
- 
   const accentColor = '#6C63FF';
   const backgroundColor = theme === 'light' ? '#f8fafc' : '#0f172a';
   const textColor = theme === 'light' ? '#0f172a' : '#f8fafc';
@@ -33,7 +32,7 @@ const UrlScreen = () => {
       const urlPattern =
         /^(https?:\/\/)([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
       if (!urlPattern.test(newsText)) {
-       setInvalidUrlModalVisible(true);
+        setInvalidUrlModalVisible(true);
         return;
       }
       navigation.navigate('UrlResultScreen', {resultUrl: newsText});
@@ -88,7 +87,7 @@ const UrlScreen = () => {
           }}>
           Enter the news URL you want to verify
         </Text> */}
-        <TextInput
+        {/* <TextInput
           style={[
             styles.input,
             {
@@ -104,8 +103,35 @@ const UrlScreen = () => {
           placeholderTextColor={mutedTextColor}
           value={newsText}
           onChangeText={setNewsText}
+        /> */}
+
+        <TextInput
+          mode="outlined"
+          label="URL Input"
+          value={newsText}
+          onChangeText={setNewsText}
+          multiline
+          placeholder="Paste or type a news link"
+          activeOutlineColor="#6C63FF" // color when focused
+          textColor={textColor}
+          style={{
+            backgroundColor: backgroundColor,
+            width: '90%',
+            alignSelf: 'center',
+            marginBottom: 12,
+          }}
+          contentStyle={{
+            textAlignVertical: 'center', // Move this here
+          }}
+          left={<TextInput.Icon icon="link" />}
+          theme={{
+            roundness: 12,
+            colors: {
+              placeholder: mutedTextColor,
+            },
+          }}
         />
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[
             styles.button,
             {
@@ -118,7 +144,21 @@ const UrlScreen = () => {
           activeOpacity={0.8}
           onPress={submit}>
           <Text style={styles.buttonText}>Verify</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <Button
+          mode="contained"
+          onPress={submit}
+          style={{
+            backgroundColor: accentColor,
+            width: '90%',
+            alignSelf: 'center',
+            elevation: 0,
+            paddingVertical: 3,
+            borderRadius: 50,
+          }}
+          labelStyle={styles.buttonText}>
+          Verify
+        </Button>
       </View>
       <Modal
         animationType="fade"
@@ -180,7 +220,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     paddingVertical: 10,
-    
+
     borderRadius: 50,
   },
   modalButtonText: {
@@ -210,7 +250,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontWeight: 600,
     fontSize: 16,
   },
   input: {

@@ -6,6 +6,7 @@ import { useState, createContext,useEffect } from 'react';
 import UploadScreen from './src/components/ImagePickerExample';
 import Home from './src/components/Home';
 import AssistantScreen from './src/components/AssistantScreen';
+// import AssistantScreen from './src/components/AssistantScreen';
 import TextScreen from './src/components/TextScreen';
 import ResultScreen from './src/screens/ResultScreen';
 import TextResultScreen from './src/screens/TextResultScreen';

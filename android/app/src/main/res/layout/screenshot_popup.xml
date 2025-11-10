@@ -59,32 +59,87 @@
                 android:id="@+id/loading_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
+                android:gravity="start"
                 android:orientation="vertical"
-                android:padding="32dp"
+                android:padding="20dp"
                 android:visibility="gone"
                 tools:visibility="gone">
 
-                <ProgressBar
+                <!-- <ProgressBar
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:indeterminateTint="#6C63FF" />
-
+                    android:indeterminateTint="#6C63FF" /> -->
+                  <!-- Verification label -->
                 <TextView
+                    android:id="@+id/verification_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Verification Progress"
+                    android:textSize="12sp"
+                    android:textColor="#737373"/>
+                    <!-- Progress percentage -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginTop="4dp">
+                    <TextView
+                        android:id="@+id/progress_percent_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0%"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:layout_marginRight="4dp"
+                        android:textColor="#0f172a"/>
+                     <TextView
+                       
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:text="Completed"
+                        android:textColor="#0f172a"/>
+                </LinearLayout>
+                 <!-- Horizontal progress bar -->
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp"
+                    android:progress="0"
+                    android:max="100"
+                    android:progressTint="#6C63FF"
+                    android:indeterminate="false"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="4dp"
+                    android:progressBackgroundTint="#e2e8f0"
+                     android:progressDrawable="@drawable/progress_bar_rounded"
+                    />
+                <!-- <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Analyzing news content..."
                     android:textColor="#0f172a"
-                    android:textSize="16sp" />
-
+                    android:textSize="16sp" /> -->
                 <TextView
+                    android:id="@+id/progress_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Starting..."
+                    android:textSize="12sp"
+                    android:textColor="#737373"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginLeft="6dp"/>
+                <!-- <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="This may take a few seconds"
                     android:textColor="#AAAAAA"
-                    android:textSize="14sp" />
+                    android:textSize="14sp" /> -->
             </LinearLayout>
 
              <!-- Extracted Text -->

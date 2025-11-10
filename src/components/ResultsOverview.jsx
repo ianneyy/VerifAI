@@ -54,7 +54,7 @@ const ResultsOverview = ({
           <TouchableOpacity
             style={[
               styles.button,
-              activeContent === 'content1' && styles.active
+              activeContent === 'content1' && styles.active,
             ]}
             onPress={() => setActiveContent('content1')}>
             <Text
@@ -430,12 +430,27 @@ const ResultsOverview = ({
                       numberOfLines={2}>
                       {item.title}
                     </Text>
-                    <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <Text style={[styles.newsSource, {color: accentColor}]}>
+                    <View
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}>
+                      <Text
+                        style={[
+                          styles.newsSource,
+                          {color: accentColor, flexShrink: 1},
+                        ]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail">
                         Source: {item.source}
                       </Text>
-                      <Text style={[styles.newsSource, {color: '#22c55e', fontWeight: 'bold'}]}>
-                       Similarity: {item.similarity}%
+                      <Text
+                        style={[
+                          styles.newsSource,
+                          {color: '#22c55e', fontWeight: 'bold'},
+                        ]}>
+                        Similarity: {item.similarity}%
                       </Text>
                     </View>
                     <Text

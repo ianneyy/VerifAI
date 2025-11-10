@@ -13,26 +13,31 @@ import {
 const ClaimText = ({
   cleanText,
   textColor,
+  style,
+  numberOfLines = 2,
+  ellipsizeMode = 'tail',
 }) => {
   return (
     <View style={styles.textContainer}>
-      <Text style={[styles.sectionTitle, {color: textColor}]}>
+      <Text
+        style={[styles.sectionTitle, {color: textColor}, style]}
+        numberOfLines={numberOfLines}
+        ellipsizeMode={ellipsizeMode}>
         {cleanText || 'No text extracted yet.'}
       </Text>
     </View>
-
   );
 };
 export default ClaimText;
 
 const styles = StyleSheet.create({
   textContainer: {
-    marginHorizontal: 20,
+    // marginHorizontal: 20,
     marginTop: 10,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
+    // fontWeight: 'bold',
     marginBottom: 10,
   },
 });

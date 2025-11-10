@@ -9,12 +9,13 @@ import {
   SafeAreaView,
   Alert,
   StatusBar,
-  TextInput,
+  // TextInput,
   Image,
   Modal,
 } from 'react-native';
 import {ThemeContext} from '../../App';
 import {useNavigation} from '@react-navigation/native';
+import {Button, TextInput} from 'react-native-paper';
 
 const TextScreen = () => {
   const {theme} = useContext(ThemeContext);
@@ -64,7 +65,7 @@ const TextScreen = () => {
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: textColor}]}>
-          Text Verification
+          VerifAI Text
         </Text>
         <TouchableOpacity
           style={styles.helpButton}
@@ -86,7 +87,7 @@ const TextScreen = () => {
             style={styles.image}
           />
         </View>
-        <TextInput
+        {/* <TextInput
           style={[
             styles.input,
             {
@@ -102,21 +103,53 @@ const TextScreen = () => {
           placeholderTextColor={mutedTextColor}
           value={newsText}
           onChangeText={setNewsText}
-        />
-        <TouchableOpacity
-          style={[
-            styles.button,
-            {
-              backgroundColor: accentColor,
-              width: '90%',
-              alignSelf: 'center',
-              elevation: 0,
+        /> */}
+        <TextInput
+          mode="outlined"
+          label="Text Input"
+          value={newsText}
+          onChangeText={setNewsText}
+          multiline
+          placeholder="Write or paste your text here"
+          activeOutlineColor="#6C63FF" // color when focused
+          textColor={textColor}
+          style={{
+            backgroundColor: backgroundColor,
+            width: '90%',
+            alignSelf: 'center',
+            marginBottom: 12,
+            paddingVertical: 0,
+          }}
+          contentStyle={{
+            textAlignVertical: 'center', // Move this here
+          }}
+          left={<TextInput.Icon icon="text" />}
+          theme={{
+            roundness: 12,
+            colors: {
+              placeholder: mutedTextColor,
             },
-          ]}
-          activeOpacity={0.8}
-          onPress={submit}>
-          <Text style={styles.buttonText}>Verify</Text>
-        </TouchableOpacity>
+            fonts: {
+              bodyLarge: {
+                fontSize: 14, // adjust placeholder text size
+              },
+            },
+          }}
+        />
+        <Button
+          mode="contained"
+          onPress={submit}
+          style={{
+            backgroundColor: accentColor,
+            width: '90%',
+            alignSelf: 'center',
+            elevation: 0,
+            paddingVertical: 3,
+            borderRadius: 50,
+          }}
+          labelStyle={styles.buttonText}>
+          Verify
+        </Button>
       </View>
       <Modal
         animationType="fade"
@@ -149,7 +182,6 @@ const TextScreen = () => {
           </View>
         </View>
       </Modal>
-     
     </SafeAreaView>
   );
 };
@@ -206,7 +238,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontWeight: 600,
     fontSize: 16,
   },
   input: {

@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {ThemeContext} from '../../App';
 import InstructionModal from './InstructionModal';
+import {Button} from 'react-native-paper';
 
 const ImagePickerExample = () => {
   const navigation = useNavigation();
@@ -35,6 +36,9 @@ const ImagePickerExample = () => {
   const cardBackground = theme === 'light' ? '#ffffff' : darkCardBackground;
   const borderColor = theme === 'light' ? '#e2e8f0' : darkBorderColor;
   const textColor = theme === 'light' ? '#0f172a' : darkTextColor;
+
+
+  const buttonTextColor = theme === 'light' ? '#6C63FF' : darkTextColor;
   const subtitleColor = theme === 'light' ? '#64748b' : darkSubtitleColor;
   const placeholderTextColor = theme === 'light' ? '#94a3b8' : '#777777';
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
@@ -94,7 +98,6 @@ const ImagePickerExample = () => {
           <Icon name="help-circle" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-     
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={{alignItems: 'center', justifyContent: 'center', flex: 1}}>
@@ -128,7 +131,7 @@ const ImagePickerExample = () => {
           //   </Text>
           // </View>
         )}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[
             styles.pickButton,
             {
@@ -143,7 +146,29 @@ const ImagePickerExample = () => {
           <Text style={[styles.pickButtonText, {color: '#6C63FF'}]}>
             Select Image
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        {/* import {Button} from 'react-native-paper'; // Replace this part */}
+        <Button
+          mode="outlined"
+          icon="image-outline"
+          onPress={pickImage}
+          style={{
+            backgroundColor: backgroundColor, // soft off-white tint
+            borderColor: '#6C63FF',
+            borderWidth: 1,
+            width: '90%',
+            alignSelf: 'center',
+            elevation: 0,
+          }}
+          contentStyle={{
+            paddingVertical: 8, // adds vertical space
+          }}
+          labelStyle={{
+            color: accentColor,
+            fontWeight: '500',
+          }}>
+          Select Image
+        </Button>
         {imageUri && (
           <TouchableOpacity
             style={[

@@ -3,7 +3,7 @@
 
 import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
-import {submitText} from '../services/newsCall';
+import {submitTextWithProgress} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
 
 import {
@@ -19,7 +19,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import TextGauge from '../components/TextGauge';
 import IssueModal from '../components/IssueModal';
 import TextResultOverview from '../components/TextResultOverview';
-import Loading from '../components/Loading';
+import VerifyProgress from '../components/TextLoading';
 import Help from '../components/TextScreenHelp';
 import ClaimText from '../components/ClaimText';
 import NonClaimError from '../components/NonClaimError';
@@ -39,7 +39,6 @@ const TextResultScreen = () => {
   const [text, setText] = useState('');
   const [isClaim, setIsClaim] = useState(true);
 
-
   const [news, setNews] = useState([]);
   const [matchedArticleScore, setMatchedArticleScore] = useState(0);
   const [prediction, setPrediction] = useState('');
@@ -54,6 +53,8 @@ const TextResultScreen = () => {
   const [isHelpVisible, setHelpVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const [progress, setProgress] = useState(0);
+  const [message, setMessage] = useState('');
 
   const darkBackground = '#0f172a';
   // const darkCardBackground = '#090e1a';
@@ -71,53 +72,108 @@ const TextResultScreen = () => {
   const placeholderTextColor = theme === 'light' ? '#94a3b8' : '#777777';
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
 
+  // useEffect(() => {
+  //   const processText = async () => {
+  //     try {
+  //       if (!resultText) {
+  //         return;
+  //       }
+  //       await initDB();
+  //       setLoading(true);
+
+  //       const textResult = await submitText(resultText);
+
+  //       if (textResult) {
+  //         setIsClaim(textResult.isClaim);
+
+  //         console.log(textResult.isClaim);
+  //         if (!textResult.isClaim) {
+  //           setIsModalVisible(true);
+  //         } else {
+  //           setIsModalVisible(false);
+  //           // setContentLoading(false);
+  //           setNews(textResult.matchedArticles);
+  //           setText(textResult.text);
+  //           setPrediction(textResult.prediction);
+  //           setGauge(textResult.score);
+  //           setMatchedArticleScore(textResult.matchedArticleScore);
+  //           const factCheckData = {
+  //             claim: textResult.text,
+  //             verdict: textResult.score,
+  //             writing_style: textResult.prediction,
+  //             method: 'Text Verification',
+  //           };
+
+  //           console.log('📝 Inserting fact check:', factCheckData);
+  //           await insertFactCheck(factCheckData);
+  //           console.log('✅ Fact check inserted.');
+  //         }
+
+  //       } else {
+  //         console.warn('⚠️ No data returned from text processing!');
+  //       }
+  //     } catch (error) {
+  //       console.error('❌ Error processing text:', error);
+  //     } finally {
+  //       setLoading(false);
+  //       // setContentLoading(false);
+  //       // setResultLoading(false);
+  //     }
+  //   };
+  //   processText();
+  // }, [resultText]);
+
   useEffect(() => {
     const processText = async () => {
       try {
-        if (!resultText) {
-          return;
-        }
+        if (!resultText) return;
+
         await initDB();
         setLoading(true);
-        const textResult = await submitText(resultText);
 
-        if (textResult) {
-          setIsClaim(textResult.isClaim);
+        submitTextWithProgress(
+          resultText,
+          (p, msg) => {
+            setProgress(p);
+            setMessage(msg);
+          },
+          async textResult => {
+            setLoading(false);
+            setIsClaim(textResult.isClaim);
 
-          console.log(textResult.isClaim);
-          if (!textResult.isClaim) {
-            setIsModalVisible(true);
-          } else {
-            setIsModalVisible(false);
-            // setContentLoading(false);
-            setNews(textResult.matchedArticles);
-            setText(textResult.text);
-            setPrediction(textResult.prediction);
-            setGauge(textResult.score);
-            setMatchedArticleScore(textResult.matchedArticleScore);
-            const factCheckData = {
-              claim: textResult.text,
-              verdict: textResult.score,
-              writing_style: textResult.prediction,
-              method: 'Text Verification',
-            };
+            if (!textResult.isClaim) {
+              setIsModalVisible(true);
+            } else {
+              setIsModalVisible(false);
+              setNews(textResult.matched_articles);
+              setText(textResult.text);
+              setPrediction(textResult.prediction);
+              setGauge(textResult.score);
+              setMatchedArticleScore(textResult.score);
 
-            console.log('📝 Inserting fact check:', factCheckData);
-            await insertFactCheck(factCheckData);
-            console.log('✅ Fact check inserted.');
-          }
+              const factCheckData = {
+                claim: textResult.text,
+                verdict: textResult.score,
+                writing_style: textResult.prediction,
+                method: 'Text Verification',
+              };
 
-        } else {
-          console.warn('⚠️ No data returned from text processing!');
-        }
+              console.log('📝 Inserting fact check:', factCheckData);
+              await insertFactCheck(factCheckData);
+              console.log('✅ Fact check inserted.');
+            }
+          },
+          error => {
+            console.error('❌ Error processing text:', error);
+            setLoading(false);
+          },
+        );
       } catch (error) {
-        console.error('❌ Error processing text:', error);
-      } finally {
+        console.error('❌ Unexpected error:', error);
         setLoading(false);
-        // setContentLoading(false);
-        // setResultLoading(false);
       }
     };
+
     processText();
   }, [resultText]);
 
@@ -131,12 +187,10 @@ const TextResultScreen = () => {
       <View style={[styles.header, {borderBottomColor: borderColor}]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('Home')}>
+          onPress={() => navigation.navigate('Text')}>
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, {color: textColor}]}>
-          Result
-        </Text>
+        <Text style={[styles.headerTitle, {color: textColor}]}>Result</Text>
         <TouchableOpacity
           style={styles.helpButton}
           onPress={() => setHelpVisible(true)}>
@@ -149,17 +203,47 @@ const TextResultScreen = () => {
         {loading ? (
           <View
             style={{
-              marginTop: 300,
+              marginTop: 200,
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-            <Loading accentColor={accentColor} subtitleColor={subtitleColor} />
+            <VerifyProgress
+              message={message}
+              progress={progress}
+              textColor={textColor}
+              subtitleColor={subtitleColor}
+            />
           </View>
         ) : (
           <>
-            {/* EXTRACTED TEXT */}
+            {/*EXTRACTED TEXT */}
 
-            <ClaimText cleanText={text} textColor={textColor} />
+            <View style={styles.claimSection}>
+              <View style={styles.claimHeader}>
+                <Icon name="file-text" size={20} color={accentColor} />
+                <Text style={[styles.claimHeaderText, {color: textColor}]}>
+                  Claim Being Verified
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.claimContainer,
+                  {
+                    backgroundColor:
+                      theme === 'light'
+                        ? 'rgba(59, 130, 246, 0.2)' // light theme low-opacity primary
+                        : 'rgba(59, 130, 246, 0.15)', // dark theme slightly higher opacity
+                    borderLeftColor: accentColor,
+                  },
+                ]}>
+                <ClaimText
+                  cleanText={text}
+                  textColor={textColor}
+                  containerStyle={{paddingLeft: 0}} // optional if you want extra control
+                />
+              </View>
+            </View>
 
             {/* GAUGE */}
             <View style={styles.textContainer}>
@@ -216,6 +300,28 @@ export default TextResultScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  claimSection: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  claimHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  claimHeaderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  claimContainer: {
+    padding: 16,
+    borderRadius: 12,
+    
+    
   },
   header: {
     flexDirection: 'row',

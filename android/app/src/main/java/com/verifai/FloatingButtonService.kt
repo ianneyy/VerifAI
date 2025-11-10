@@ -52,6 +52,21 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.Cursor
 import android.view.MotionEvent
 import android.view.ViewGroup
+import android.util.Base64
+import org.json.JSONObject
+import okhttp3.*
+import okhttp3.sse.EventSource
+import okhttp3.sse.EventSourceListener
+import okhttp3.sse.EventSources
+import okio.IOException
+import okhttp3.OkHttpClient
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import android.widget.ProgressBar
+import java.util.concurrent.TimeUnit
+import org.json.JSONArray
+
 data class VerificationLevel(
     val label: String,
     val description: String
@@ -653,39 +668,47 @@ class FloatingButtonService : Service() {
         }
     }
 
-    private fun showLoadingState(isLoading: Boolean) {
-        Handler(Looper.getMainLooper()).post {
-            try {
-                if (popupView != null) {
-                    val loadingContainer = popupView?.findViewById<LinearLayout>(R.id.loading_container)
-                    val contentContainer = popupView?.findViewById<LinearLayout>(R.id.content_container)
-                    val extractedText = popupView?.findViewById<LinearLayout>(R.id.extracted_text)
-                    
-                    if (isLoading) {
-                        loadingContainer?.visibility = View.VISIBLE
-                        contentContainer?.visibility = View.GONE
-                        extractedText?.visibility = View.GONE
-                    } else {
-                        loadingContainer?.visibility = View.GONE
-                        contentContainer?.visibility = View.VISIBLE
-                        extractedText?.visibility = View.VISIBLE
-                    }
+private fun updateProgressBar(isLoading: Boolean, progress: Int = 0, message: String = "") {
+    Handler(Looper.getMainLooper()).post {
+        try {
+            if (popupView != null) {
+                val loadingContainer = popupView?.findViewById<LinearLayout>(R.id.loading_container)
+                val contentContainer = popupView?.findViewById<LinearLayout>(R.id.content_container)
+                val extractedText = popupView?.findViewById<LinearLayout>(R.id.extracted_text)
+                
+                val progressBar = popupView?.findViewById<ProgressBar>(R.id.progress_bar)
+                val progressPercentLabel = popupView?.findViewById<TextView>(R.id.progress_percent_label)
+                val progressMessage = popupView?.findViewById<TextView>(R.id.progress_message)
+                
+                if (isLoading) {
+                    loadingContainer?.visibility = View.VISIBLE
+                    contentContainer?.visibility = View.GONE
+                    extractedText?.visibility = View.GONE
+
+                    progressBar?.progress = progress
+                    progressPercentLabel?.text = "$progress%"
+                    progressMessage?.text = message
+                } else {
+                    loadingContainer?.visibility = View.GONE
+                    contentContainer?.visibility = View.VISIBLE
+                    extractedText?.visibility = View.VISIBLE
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error updating loading state", e)
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating loading state", e)
         }
     }
-    private fun getServerUrl(): String {
-        return if (isEmulator()) {
-            // "http://10.0.2.2:5001"
-            "https://ovx7-verifai.hf.space"
-        } else {
-            // "http://10.114.160.193:5001" // <-- your laptop's real IP address
-            "https://ovx7-verifai.hf.space"
-        }
+}
+
+private fun getServerUrl(): String {
+    return if (isEmulator()) {
+        "https://ovx7-verifai.hf.space"
+    } else {
+        "http://10.121.34.193:5001"
     }
-    fun isEmulator(): Boolean {
+}
+
+fun isEmulator(): Boolean {
     return (Build.FINGERPRINT.contains("generic")
             || Build.FINGERPRINT.lowercase().contains("emulator")
             || Build.MODEL.contains("Emulator")
@@ -694,358 +717,267 @@ class FloatingButtonService : Service() {
             || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
             || "google_sdk" == Build.PRODUCT)
 }
-    private fun sendImageToServer(bitmap: Bitmap) {
-        Thread {
-            try {
-                // Show loading state
-                showLoadingState(true)
-                val serverUrl = getServerUrl()
-                // Send image to /news endpoint
-                val url = URL("$serverUrl/news")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.doOutput = true
 
-                // Generate a unique boundary
-                val boundary = "*****" + System.currentTimeMillis() + "*****"
-                connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+private fun sendImageToServer(bitmap: Bitmap) {
+    val context = this // Store context reference
+    
+    Thread {
+        try {
+            Log.d(TAG, "Starting image upload...")
+            updateProgressBar(true, 0, "Starting upload...")
+          
+            // Convert Bitmap to Base64
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            val imageBytes = outputStream.toByteArray()
+            val base64Image = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
+            
+            Log.d(TAG, "Image converted to base64, size: ${base64Image.length} chars")
 
-                // Convert bitmap to byte array
-                val outputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                val imageBytes = outputStream.toByteArray()
+            val serverUrl = "${getServerUrl()}/news"
+            Log.d(TAG, "Connecting to: $serverUrl")
 
-                // Write the multipart form data
-                connection.outputStream.use { os ->
-                    os.write("--$boundary\r\n".toByteArray())
-                    os.write("Content-Disposition: form-data; name=\"image\"; filename=\"screenshot.png\"\r\n".toByteArray())
-                    os.write("Content-Type: image/png\r\n\r\n".toByteArray())
-                    os.write(imageBytes)
-                    os.write("\r\n".toByteArray())
-                    os.write("--$boundary--\r\n".toByteArray())
+            // Configure OkHttpClient with appropriate timeouts for SSE
+            val client = OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.SECONDS) // SSE never times out
+                .build()
+
+            // val requestBody = JSONObject().put("image", base64Image).toString()
+             // Build JSON request
+            val requestBody = JSONObject().put("image", base64Image)
+                .toString()
+                .toRequestBody("application/json; charset=utf-8".toMediaType())
+
+            val request = Request.Builder()
+                .url(serverUrl)
+                .post(requestBody)
+                .addHeader("Accept", "text/event-stream")
+                .addHeader("Cache-Control", "no-cache")
+                .build()
+
+            Log.d(TAG, "Sending request...")
+            
+
+
+             val listener = object : EventSourceListener() {
+
+                override fun onOpen(eventSource: EventSource, response: Response) {
+                    Log.d(TAG, "✅ Connected to SSE stream")
+                    updateProgressBar(true, 5, "Connected to server...")
                 }
-
-                // Get the response code
-                val responseCode = connection.responseCode
-                Log.d(TAG, "News endpoint response code: $responseCode")
-
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    Log.d(TAG, "News endpoint response: $response")
-
+                override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
+                    Log.d(TAG, "📩 SSE Data: $data")
                     try {
-                        // Parse the JSON response
-                        val jsonResponse = org.json.JSONObject(response)
-                        
-                        // Get the cleaned text and update the content text in the popup
-                        val cleanedText = jsonResponse.getString("cleaned_text")
-                        val sourceName = jsonResponse.getString("source_name")
-                        val score = jsonResponse.getInt("score")
+                            val json = JSONObject(data)
+                            
+                           
+                            
+                            val complete = json.optBoolean("complete", false)
+                            val result = json.optJSONObject("result")
+                            var progress = json.optInt("progress", 0)
+                            val message = json.optString("message", "")
+                            
+                            Log.d(TAG, "Progress: $progress%, Message: $message, Complete: $complete")
+                            
+                            // Update progress bar (only if not complete)
+                            if (!complete) {
+                                updateProgressBar(true, progress, message)
+                            }
+                            
+                            if (complete && result != null) {
+                                Log.d(TAG, "Received complete result")
+                                // Final results received
+                                Handler(Looper.getMainLooper()).post {
+                                    try {
+                                        updateProgressBar(false, 100, "Verification complete")
 
+                                        // Extract all data from result
+                                        val cleanedText = result.optString("cleaned_text", "")
+                                        val sourceName = result.optString("source_name", "Unknown")
+                                        val score = result.optInt("score", 0)
+                                        val sourceScore = result.optInt("source_score", 0)
+                                        val matchedArticles = result.optJSONArray("matched_articles") ?: JSONArray()
+                                        val prediction = result.optString("prediction", "Unknown")
+                                        val matchPerson = result.optBoolean("match_person", false)
+                                        val faceRecognition = result.optJSONObject("face_recognition")
+                                        val artist = faceRecognition?.optString("artist", "Unknown") ?: "Unknown"
+                                        val totalAveRounded = result.optDouble("total_ave_rounded", 0.0).roundToInt()
 
-                        val sourceScore = jsonResponse.getInt("source_score")
-                
-                        val sourceCredibilityIssueModal = if (sourceScore >= 1 ) "" else "Click to see possible issues"
+                                        Log.d(TAG, "Score: $score, Source: $sourceName, Articles: ${matchedArticles.length()}")
 
-                        val matchedArticles = jsonResponse.getJSONArray("matched_articles")
-                        val matchedArticleScore = jsonResponse.getDouble("total_ave_rounded")
+                                        // Update DonutProgress & labels
+                                        val donutProgress = popupView?.findViewById<com.github.lzyzsd.circleprogress.DonutProgress>(R.id.donut_progress)
+                                        val donutProgressPercent = popupView?.findViewById<TextView>(R.id.progress_percent)
+                                        val donutProgressLabel = popupView?.findViewById<TextView>(R.id.progress_label)
 
-                        val whole = matchedArticleScore.roundToInt()
-
-                        // val matchedArticlesCount = matchedArticles.length()
-
-                   
-                        val matchedArticlesCountIssueModal = if (matchedArticleScore >= 1) "" else "Click to see possible issues"
-
-                        val matchedPerson = jsonResponse.getBoolean("match_person")
-                        val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
-                        Log.d(TAG, "matchedPerson: $matchedPerson, faceRecognition: $faceRecognition")
-
-                        val matchedPersonScore = if (matchedPerson || faceRecognition == "No face detected") "+9" else "+0"
-                        val matchedPersonIssueModal = if (matchedPerson || faceRecognition == "No face detected") "" else "Click to see possible issues"
-
-                        
-                        val prediction = jsonResponse.getString("prediction")
-                        val predictionScore = if (prediction == "Credible") "+19" else "+0"
-                        val predictionIssueModal = if (prediction == "Credible") "" else "Click to see possible issues"
-
-
-                        // val faceRecognition = jsonResponse.getJSONObject("face_recognition").getString("artist")
-                       
-                       val label = when {
-                            score == 100 -> "High Credibility"
-                            score >= 75 -> "Generally Credible"
-                            score >= 60 -> "Credible with Exceptions"
-                            score >= 40 -> "Proceed with Caution"
-                            else -> "Proceed with Maximum Caution"
-                        }
-                        val colorLabel = when {
-                            score == 100 -> "#4CD964"
-                            score >= 75 -> "#a3e635"
-                            score >= 60 -> "#FFCC00"
-                            score >= 40 -> "#fb923c"
-                            else -> "#FF3B30"
-                        }
-                        val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-                      
-                        insertData(this, cleanedText, sourceName, score, sourceScore, predictionScore, whole, matchedPersonScore, faceRecognition, currentTime, "VerifAI Assistant")
-
-                        // Update UI on the main thread
-                        Handler(Looper.getMainLooper()).post {
-                            try {
-                                if (popupView != null) {
-                                  
-                                    // Get the DonutProgress view from popup
-                                    val donutProgress = popupView?.findViewById<com.github.lzyzsd.circleprogress.DonutProgress>(R.id.donut_progress)
-
-                                    val donutProgressPercent = popupView?.findViewById<TextView>(R.id.progress_percent)
-                                    val donutProgressLabel = popupView?.findViewById<TextView>(R.id.progress_label)
-                                    
-                                    donutProgressPercent?.setTextColor(Color.parseColor(colorLabel))
-                                    donutProgressLabel?.setTextColor(Color.parseColor(colorLabel))
-
-
-                                    // Update gauge if available
-                                    updateVerificationUI(score)
-
-                                    donutProgressPercent?.text = "$score%"
-                                    donutProgressLabel?.text = label
-                                    
-                                    donutProgress?.apply {
-                                        progress = score.toFloat()
-                                        finishedStrokeColor = Color.parseColor(colorLabel)
-
-                                    }
-
-                                    // sourceCredibilityScore
-                                    popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+$sourceScore%"
-                                    val scText = popupView?.findViewById<TextView>(R.id.source_credibility_score)
-                                    val scColor = if (sourceScore >= 1) "#9DFFBA" else "#FF797B"
-                                    scText?.setTextColor(Color.parseColor(scColor))
-
-                                    val sourceCredibilityIssueText = popupView?.findViewById<TextView>(R.id.source_credibility_modal_issue)
-                                    sourceCredibilityIssueText?.text = sourceCredibilityIssueModal
-                                    sourceCredibilityIssueText?.visibility = if (sourceCredibilityIssueModal.isEmpty()) View.GONE else View.VISIBLE
-                                    val scBorderColor = popupView?.findViewById<View>(R.id.source_credibility_border_color)
-                                    scBorderColor?.setBackgroundColor(Color.parseColor(scColor))
-
-
-
-                                      // predictionScore
-                                    popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "$predictionScore%"
-                                    val pText = popupView?.findViewById<TextView>(R.id.content_authenticity_score)
-                                    val pColor = if (predictionScore == "+19") "#9DFFBA" else "#FF797B"
-                                    pText?.setTextColor(Color.parseColor(pColor))
-                                    val predictionIssueText = popupView?.findViewById<TextView>(R.id.content_authenticity_modal_issue)
-                                    predictionIssueText?.text = predictionIssueModal
-                                    predictionIssueText?.visibility = if (predictionIssueModal.isEmpty()) View.GONE else View.VISIBLE
-                                    val pBorderColor = popupView?.findViewById<View>(R.id.content_authenticity_border_color)
-                                    pBorderColor?.setBackgroundColor(Color.parseColor(pColor))
-
-                                    val wholeNum = whole.toString()
-
-                                      // matchedArticlesCountScore
-                                    // popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+$wholeNum%"
-                                    // val maText = popupView?.findViewById<TextView>(R.id.matched_article_score)
-                                    // val maColor = if (matchedArticleScore >= 1) "#9DFFBA" else "#FF797B"
-                                    // maText?.setTextColor(Color.parseColor(maColor))
-                                    // val matchedArticlesCountIssueText = popupView?.findViewById<TextView>(R.id.matched_article_modal_issue)
-                                    // matchedArticlesCountIssueText?.text = matchedArticlesCountIssueModal
-                                    // matchedArticlesCountIssueText?.visibility = if (matchedArticlesCountIssueModal.isEmpty()) View.GONE else View.VISIBLE
-                                    // val maBorderColor = popupView?.findViewById<View>(R.id.matched_article_border_color)
-                                    // maBorderColor?.setBackgroundColor(Color.parseColor(maColor))
-                                    
-                                      // matchedPersonScore
-                                    popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "$matchedPersonScore%"
-                                    val mpText = popupView?.findViewById<TextView>(R.id.face_context_matching_score)
-                                    val mpColor = if (matchedPersonScore == "+9") "#9DFFBA" else "#FF797B"
-                                    mpText?.setTextColor(Color.parseColor(mpColor))
-                                     val matchedPersonIssueText = popupView?.findViewById<TextView>(R.id.face_context_matching_modal_issue)
-                                    matchedPersonIssueText?.text = matchedPersonIssueModal
-                                    matchedPersonIssueText?.visibility = if (matchedPersonIssueModal.isEmpty()) View.GONE else View.VISIBLE
-                                    val mpBorderColor = popupView?.findViewById<View>(R.id.face_context_matching_border_color)
-                                    mpBorderColor?.setBackgroundColor(Color.parseColor(mpColor))
-
-
-
-                                    // // Update the content text
-                                    popupView?.findViewById<TextView>(R.id.content_text)?.text = cleanedText
-                                    popupView?.findViewById<TextView>(R.id.content_source)?.text = "Source: $sourceName"
-                                    
-                                    // // Update face recognition
-                                    // popupView?.findViewById<TextView>(R.id.face_detected)?.text = faceRecognition
-                                    
-                                    // // Update source credibility
-                                    // popupView?.findViewById<TextView>(R.id.source_credibility)?.apply {
-                                    //     text = sourceCredibility
-                                    //     val color = if (text.equals("Credible")) {
-                                    //         android.graphics.Color.parseColor("#36AE7C")
-                                    //     } else {
-                                    //         android.graphics.Color.parseColor("#EB5353")
-                                    //     }
-                                    //     setTextColor(color)
-                                    // }
-                                    
-                                    // // Update matched articles count
-                                    // popupView?.findViewById<TextView>(R.id.matched_article)?.text = "${matchedArticles.length()} matching article(s)"
-                                    
-                                    // // Update content authenticity
-                                    // popupView?.findViewById<TextView>(R.id.content_authenticity)?.text = "Authentic (80-100%)"
-                                    
-                                    // Get the container for articles
-                                    val articlesContainer = popupView?.findViewById<LinearLayout>(R.id.articles_container)
-                                    articlesContainer?.removeAllViews() // Clear existing articles
-
-                                    // Check if there are no matched articles
-                                    if (matchedArticles.length() == 0) {
-                                        // Create a TextView for "No related news"
-                                        val noRelatedNewsText = TextView(this).apply {
-                                            text = "No related news"
-                                            setTextColor(Color.parseColor("#FF0000")) // Optional: Change color if desired
-                                            textSize = 16f
-                                            layoutParams = LinearLayout.LayoutParams(
-                                                LinearLayout.LayoutParams.MATCH_PARENT,
-                                                LinearLayout.LayoutParams.WRAP_CONTENT
-                                            ).apply {
-                                                topMargin = 16
-                                            }
-                                            gravity = Gravity.CENTER // Center the text in the container
+                                        val label = when {
+                                            score == 100 -> "High Credibility"
+                                            score >= 75 -> "Generally Credible"
+                                            score >= 60 -> "Credible with Exceptions"
+                                            score >= 40 -> "Questionable/Needs Verification"
+                                            else -> "Low Credibility/Likely False"
                                         }
-                                        // Add the "No related news" message to the container
-                                        articlesContainer?.addView(noRelatedNewsText)
-                                    } else {
-                                        // Add each article to the container
-                                        for (i in 0 until matchedArticles.length()) {
-                                            val article = matchedArticles.getJSONObject(i)
-                                            val title = article.getString("title")
-                                            val source = article.getString("source")
-                                            val snippet = article.getString("snippet")
-                                            val similarity = article.getInt("similarity")
-                                            
-                                            // Create article layout
-                                            val articleLayout = LinearLayout(this).apply {
-                                                layoutParams = LinearLayout.LayoutParams(
-                                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                                    LinearLayout.LayoutParams.WRAP_CONTENT
-                                                ).apply {
-                                                    bottomMargin = 16
-                                                }
-                                                setBackgroundColor(Color.parseColor("#f8fafc"))
-                                                orientation = LinearLayout.VERTICAL
-                                                setPadding(12, 12, 12, 12)
-                                            }
-                                            
-                                            // Add title
-                                            articleLayout.addView(TextView(this).apply {
-                                                text = title
-                                                setTextColor(Color.parseColor("#0f172a"))
-                                                textSize = 16f
-                                                layoutParams = LinearLayout.LayoutParams(
-                                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                                    LinearLayout.LayoutParams.WRAP_CONTENT
-                                                )
-                                            })
-                                            
-                                            // Add source
-                                            // articleLayout.addView(TextView(this).apply {
-                                            //     text = "Source: $source"
-                                            //     setTextColor(Color.parseColor("#6C63FF"))
-                                            //     textSize = 12f
-                                            //     layoutParams = LinearLayout.LayoutParams(
-                                            //         LinearLayout.LayoutParams.MATCH_PARENT,
-                                            //         LinearLayout.LayoutParams.WRAP_CONTENT
-                                            //     ).apply {
-                                            //         topMargin = 4
-                                            //     }
-                                            // })
+                                        
+                                        val colorLabel = when {
+                                            score == 100 -> "#4CD964"
+                                            score >= 75 -> "#a3e635"
+                                            score >= 60 -> "#FFCC00"
+                                            score >= 40 -> "#fb923c"
+                                            else -> "#FF3B30"
+                                        }
 
-                                              // Add source and similarity in a horizontal layout
-                                                val sourceSimilarityLayout = LinearLayout(this).apply {
-                                                    layoutParams = LinearLayout.LayoutParams(
+                                        donutProgressPercent?.setTextColor(Color.parseColor(colorLabel))
+                                        donutProgressLabel?.setTextColor(Color.parseColor(colorLabel))
+                                        donutProgressPercent?.text = "$score%"
+                                        donutProgressLabel?.text = label
+                                        donutProgress?.apply {
+                                            progress = score
+                                            finishedStrokeColor = Color.parseColor(colorLabel)
+                                        }
+
+                                        // Update scores
+                                        popupView?.findViewById<TextView>(R.id.source_credibility_score)?.apply {
+                                            text = "+$sourceScore%"
+                                            setTextColor(Color.parseColor(if (sourceScore >= 1) "#9DFFBA" else "#FF797B"))
+                                        }
+
+                                        val predictionScore = if (prediction == "Credible") "+19" else "+0"
+                                        popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.apply {
+                                            text = predictionScore
+                                            setTextColor(Color.parseColor(if (predictionScore == "+19") "#9DFFBA" else "#FF797B"))
+                                        }
+
+                                        val matchedPersonScore = if (matchPerson || artist == "No face detected") "+9" else "+0"
+                                        popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.apply {
+                                            text = matchedPersonScore
+                                            setTextColor(Color.parseColor(if (matchedPersonScore == "+9") "#9DFFBA" else "#FF797B"))
+                                        }
+
+                                        // Update content
+                                        popupView?.findViewById<TextView>(R.id.content_text)?.text = cleanedText
+                                        popupView?.findViewById<TextView>(R.id.content_source)?.text = "Source: $sourceName"
+
+                                        // Populate matched articles
+                                        val articlesContainer = popupView?.findViewById<LinearLayout>(R.id.articles_container)
+                                        articlesContainer?.removeAllViews()
+
+                                        if (matchedArticles.length() == 0) {
+                                            val noRelatedNewsText = TextView(context).apply {
+                                                text = "No related news"
+                                                setTextColor(Color.RED)
+                                                textSize = 16f
+                                                gravity = Gravity.CENTER
+                                                setPadding(0, 16, 0, 16)
+                                            }
+                                            articlesContainer?.addView(noRelatedNewsText)
+                                        } else {
+                                            for (i in 0 until matchedArticles.length()) {
+                                                val article = matchedArticles.getJSONObject(i)
+                                                val title = article.optString("title", "No title")
+                                                val source = article.optString("source", "Unknown source")
+                                                val snippet = article.optString("snippet", "")
+                                                val similarity = article.optInt("similarity", 0)
+
+                                                val articleLayout = LinearLayout(context).apply {
+                                                    orientation = LinearLayout.VERTICAL
+                                                    setBackgroundColor(Color.parseColor("#f8fafc"))
+                                                    setPadding(12, 12, 12, 12)
+                                                    val params = LinearLayout.LayoutParams(
                                                         LinearLayout.LayoutParams.MATCH_PARENT,
                                                         LinearLayout.LayoutParams.WRAP_CONTENT
-                                                    ).apply {
-                                                        topMargin = 4
-                                                    }
+                                                    )
+                                                    params.setMargins(0, 0, 0, 8)
+                                                    layoutParams = params
+                                                }
+
+                                                // Title
+                                                articleLayout.addView(TextView(context).apply {
+                                                    text = title
+                                                    setTextColor(Color.parseColor("#0f172a"))
+                                                    textSize = 16f
+                                                    setPadding(0, 0, 0, 4)
+                                                })
+
+                                                // Source and Similarity row
+                                                val sourceSimilarityLayout = LinearLayout(context).apply {
                                                     orientation = LinearLayout.HORIZONTAL
                                                     gravity = Gravity.CENTER_VERTICAL
+                                                    setPadding(0, 4, 0, 4)
                                                 }
-                                              // Source TextView (left aligned)
-                                                val sourceTextView = TextView(this).apply {
+
+                                                sourceSimilarityLayout.addView(TextView(context).apply {
                                                     text = "Source: $source"
                                                     setTextColor(Color.parseColor("#6C63FF"))
                                                     textSize = 12f
-                                                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                                                }
+                                                    layoutParams = LinearLayout.LayoutParams(
+                                                        0,
+                                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                                        1f
+                                                    )
+                                                })
 
-                                                                                            // Similarity TextView (right aligned)
-                                                val similarityTextView = TextView(this).apply {
+                                                sourceSimilarityLayout.addView(TextView(context).apply {
                                                     text = "Similarity: $similarity%"
-                                                    setTextColor(Color.parseColor("#22c55e")) // Light blue
+                                                    setTextColor(Color.parseColor("#22c55e"))
                                                     textSize = 12f
                                                     gravity = Gravity.END
-                                                    layoutParams = LinearLayout.LayoutParams(
-                                                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                                                        LinearLayout.LayoutParams.WRAP_CONTENT
-                                                    )
-                                                }
+                                                })
 
-                                                   // Add both TextViews to the horizontal layout
-                                            sourceSimilarityLayout.addView(sourceTextView)
-                                            sourceSimilarityLayout.addView(similarityTextView)
-                                            articleLayout.addView(sourceSimilarityLayout)
-                                            // Add snippet
-                                            articleLayout.addView(TextView(this).apply {
-                                                text = snippet
-                                                setTextColor(Color.parseColor("#AAAAAA"))
-                                                textSize = 14f
-                                                layoutParams = LinearLayout.LayoutParams(
-                                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                                    LinearLayout.LayoutParams.WRAP_CONTENT
-                                                ).apply {
-                                                    topMargin = 4
-                                                }
-                                            })
-                                            
-                                            // Add the article layout to the container
-                                            articlesContainer?.addView(articleLayout)
+                                                articleLayout.addView(sourceSimilarityLayout)
+
+                                                // Snippet
+                                                articleLayout.addView(TextView(context).apply {
+                                                    text = snippet
+                                                    setTextColor(Color.parseColor("#AAAAAA"))
+                                                    textSize = 14f
+                                                    setPadding(0, 4, 0, 0)
+                                                })
+
+                                                articlesContainer?.addView(articleLayout)
+                                            }
                                         }
+                                        
+                                        Toast.makeText(context, "Verification complete!", Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error updating final result", e)
+                                        Toast.makeText(context, "Error displaying results: ${e.message}", Toast.LENGTH_SHORT).show()
                                     }
-
-                                    
-                                    Log.d(TAG, "Updated TextViews with JSON response")
-                                    
-                                    // Hide loading state after all updates are done
-                                    showLoadingState(false)
-                                } else {
-                                    Log.e(TAG, "Popup view is null")
-                                    showLoadingState(false)
                                 }
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error updating TextViews", e)
-                                showLoadingState(false)
+                                
                             }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "⚠️ JSON parse error: ${e.message}")
+                            
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error parsing JSON response", e)
-                        showLoadingState(false)
-                    }
-                } else {
-                    val errorStream = connection.errorStream
-                    if (errorStream != null) {
-                        val errorMessage = errorStream.bufferedReader().use { it.readText() }
-                        Log.e(TAG, "News endpoint error response: $errorMessage")
-                    }
-                    showLoadingState(false)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error in server communication", e)
-                showLoadingState(false)
-            }
-        }.start()
-    }
+                override fun onClosed(eventSource: EventSource) {
+                    Log.d(TAG, "🔚 SSE connection closed")
+                    updateProgressBar(false)
+                }
+                override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                    Log.e(TAG, "❌ SSE Error: ${t?.message}", t)
+                    Handler(Looper.getMainLooper()).post {
+                        updateProgressBar(false)
+                        Toast.makeText(context, "Connection error: ${t?.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
 
+
+             }
+              // Start SSE stream
+            EventSources.createFactory(client).newEventSource(request, listener)
+           
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in server communication", e)
+            e.printStackTrace()
+            Handler(Looper.getMainLooper()).post {
+                updateProgressBar(false)
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }.start()
+}
     private fun restoreMediaProjection() {
         cleanupScreenCapture()
 

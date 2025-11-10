@@ -2,7 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-trailing-spaces */
 'use client';
-
+import {Button, Snackbar} from 'react-native-paper';
 import React, {useState, useContext, useEffect} from 'react';
 import {
   View,
@@ -21,11 +21,13 @@ import {ThemeContext} from '../../App';
 import FloatingButtonModule from './FloatingButtonModule';
 import InstructionModal from './InstructionModal';
 
-
 const AssistantScreen = () => {
   // Initialize both states to false
   const [visible, setVisible] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   const navigation = useNavigation();
   const {theme} = useContext(ThemeContext);
 
@@ -51,7 +53,6 @@ const AssistantScreen = () => {
     initializeState();
   }, []);
 
- 
   // Check state when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
@@ -84,23 +85,33 @@ const AssistantScreen = () => {
 
       // Update local state after successful action
       setIsEnabled(newState);
-      setVisible(newState);
+      // setVisible(newState);
+
+      // Show snackbar instead of alert
+      setSnackbarMessage(
+        newState
+          ? 'VerifAI Assistant Enabled'
+          : 'VerifAI Assistant Disabled',
+      );
+      setSnackbarVisible(true);
 
       // Show the alert after action is completed
-      Alert.alert(
-        newState ? 'Assistant Enabled' : 'Assistant Disabled',
-        newState
-          ? 'The VerifAI assistant will now help you fact-check content.'
-          : 'You can re-enable the assistant at any time.',
-        [{text: 'OK'}],
-      );
+      // Alert.alert(
+      //   newState ? 'Assistant Enabled' : 'Assistant Disabled',
+      //   newState
+      //     ? 'The VerifAI assistant will now help you fact-check content.'
+      //     : 'You can re-enable the assistant at any time.',
+      //   [{text: 'OK'}],
+      // );
     } catch (error) {
       console.error('Error toggling floating button:', error);
-      Alert.alert(
-        'Error',
-        'Failed to toggle the floating button. Please try again.',
-        [{text: 'OK'}],
-      );
+      // Alert.alert(
+      //   'Error',
+      //   'Failed to toggle the floating button. Please try again.',
+      //   [{text: 'OK'}],
+      // );
+      setSnackbarMessage('Error: Failed to toggle the floating button.');
+      setSnackbarVisible(true);
     }
   };
 
@@ -135,9 +146,9 @@ const AssistantScreen = () => {
           <Icon name="help-circle" size={24} color={textColor} />
         </TouchableOpacity>
       </View>
-     
+
       {/* Content */}
-      <View style={{alignItems: 'center',  flex: 1, marginTop: 26}}>
+      <View style={{alignItems: 'center', flex: 1, marginTop: 26}}>
         {/* <Icon name="cpu" size={64} color="#6C63FF" style={{marginBottom: 36}} /> */}
         {/* <ScanText color="#6C63FF" size={98} style={{marginBottom: 36}} /> */}
         <Image
@@ -169,7 +180,7 @@ const AssistantScreen = () => {
           /> */}
           {/* <Button title="Turn on" /> */}
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[
               styles.button,
               {
@@ -194,11 +205,49 @@ const AssistantScreen = () => {
               }}>
               {isEnabled ? 'Turn Off' : 'Turn On'}
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
+          <Button
+            mode="contained"
+            onPress={toggleSwitch}
+            style={{
+              width: '90%',
+              alignSelf: 'center',
+              backgroundColor: isEnabled
+                ? primaryColor
+                : theme === 'light'
+                ? '#e2e8f0'
+                : '#334155',
+              borderRadius: 50, // optional for rounded corners
+              paddingVertical: 3,
+            }}
+            labelStyle={{
+              color: isEnabled
+                ? '#fff'
+                : theme === 'light'
+                ? '#000'
+                : '#94a3b8',
+              fontWeight: '600',
+            }}>
+            {isEnabled ? 'Turn Off' : 'Turn On'}
+          </Button>
+          {/* Snackbar */}
+
           {/* <Text style={[styles.statusText, {color: textColor}]}>
             VerifAI Assistant is {isEnabled ? 'on' : 'off'}
           </Text> */}
         </View>
+      </View>
+      <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+        <Snackbar
+          visible={snackbarVisible}
+          onDismiss={() => setSnackbarVisible(false)}
+          duration={3000}
+          action={{
+            label: 'Close',
+            onPress: () => setSnackbarVisible(false),
+          }}>
+          {snackbarMessage}
+        </Snackbar>
       </View>
     </SafeAreaView>
   );
