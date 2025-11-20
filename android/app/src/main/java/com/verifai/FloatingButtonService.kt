@@ -149,7 +149,7 @@ class FloatingButtonService : Service() {
         
         // Initialize window manager and add floating button
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            addFloatingButton()
+        addFloatingButton()
     }
   
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -623,13 +623,9 @@ class FloatingButtonService : Service() {
             popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+25%"
             popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+25%"
 
-        val displayMetrics = resources.displayMetrics
-            val width = (displayMetrics.widthPixels * 0.9).toInt()
-            val height = (displayMetrics.heightPixels * 0.8).toInt()
-
         val params = WindowManager.LayoutParams(
-                width,
-                height,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
@@ -639,7 +635,7 @@ class FloatingButtonService : Service() {
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         )
-        params.gravity = Gravity.CENTER
+        params.gravity = Gravity.FILL
         
             // Remove any existing preview if it exists
             try {
@@ -704,7 +700,7 @@ private fun getServerUrl(): String {
     return if (isEmulator()) {
         "https://ovx7-verifai.hf.space"
     } else {
-        "http://10.121.34.193:5001"
+        "https://ovx7-verifai.hf.space"
     }
 }
 
@@ -815,8 +811,8 @@ private fun sendImageToServer(bitmap: Bitmap) {
                                             score == 100 -> "High Credibility"
                                             score >= 75 -> "Generally Credible"
                                             score >= 60 -> "Credible with Exceptions"
-                                            score >= 40 -> "Questionable/Needs Verification"
-                                            else -> "Low Credibility/Likely False"
+                                            score >= 40 -> "Questionable"
+                                            else -> "Likely Fake"
                                         }
                                         
                                         val colorLabel = when {

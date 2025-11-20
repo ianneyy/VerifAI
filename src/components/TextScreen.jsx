@@ -16,6 +16,8 @@ import {
 import {ThemeContext} from '../../App';
 import {useNavigation} from '@react-navigation/native';
 import {Button, TextInput} from 'react-native-paper';
+import NetInfo from '@react-native-community/netinfo';
+
 
 const TextScreen = () => {
   const {theme} = useContext(ThemeContext);
@@ -32,25 +34,50 @@ const TextScreen = () => {
   const borderColor = theme === 'light' ? '#e2e8f0' : '#334155';
 
   const submit = async () => {
-    try {
-      //    const result = await submitTextToApi(newsText);
-      const cleanedText = newsText.replace(/[^a-zA-Z0-9\s.,!?'"()-]/g, '');
+  try {
+     const state = await NetInfo.fetch();
 
-      // Optional: prevent too much gibberish (e.g., long random letters)
-      const words = cleanedText.trim().split(/\s+/);
-      const hasVowel = /[aeiouAEIOU]/.test(cleanedText); // must have vowels
-      const isTooRandom = words.length === 1 && words[0].length > 20; // avoid long gibberish
-       const isTooShort = cleanedText.trim().length < 10;
-
-      if (!hasVowel || isTooRandom || isTooShort) {
-       setInvalidTextModalVisible(true);
-        return;
-      }
-      navigation.navigate('TextResultScreen', {resultText: newsText});
-    } catch (error) {
-      Alert.alert('Error', error.message);
+     if (!state.isConnected || !state.isInternetReachable) {
+      navigation.navigate('NoInternetScreen', {redirectTo: 'Text'});
+      return;
     }
-  };
+    const cleanedText = newsText.replace(/[^a-zA-Z0-9\s.,!?'"()-]/g, '').trim();
+    const words = cleanedText.split(/\s+/);
+
+    // 1. Must have at least one vowel
+    const hasVowel = /[aeiouAEIOU]/.test(cleanedText);
+
+    // 2. Avoid extremely long single words (likely gibberish)
+    const isTooLongWord = words.some(word => word.length > 20);
+
+    // 3. Avoid repeated letters (e.g., "aaaaaaa")
+    const hasRepeatedLetters = /([a-zA-Z])\1{4,}/.test(cleanedText);
+
+    // 4. Avoid too short text
+    const isTooShort = cleanedText.length < 10;
+
+    // 5. Check word “pattern” (mix of consonants & vowels)
+    const invalidWords = words.filter(word => {
+      const vowelCount = (word.match(/[aeiouAEIOU]/g) || []).length;
+      const consonantCount = (word.match(/[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]/g) || []).length;
+      return word.length > 3 && (vowelCount === 0 || consonantCount === 0); // words with no vowel or no consonant
+    });
+
+    const hasInvalidWords = invalidWords.length > 0;
+
+    // Final check
+    if (!hasVowel || isTooLongWord || hasRepeatedLetters || isTooShort || hasInvalidWords) {
+      setInvalidTextModalVisible(true);
+      return;
+    }
+
+    navigation.navigate('TextResultScreen', { resultText: newsText });
+
+  } catch (error) {
+    Alert.alert('Error', error.message);
+  }
+};
+
   return (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <StatusBar

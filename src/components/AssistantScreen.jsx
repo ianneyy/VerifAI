@@ -21,6 +21,11 @@ import {ThemeContext} from '../../App';
 import FloatingButtonModule from './FloatingButtonModule';
 import InstructionModal from './InstructionModal';
 
+import {NativeEventEmitter, NativeModules} from 'react-native';
+const {FloatingButtonEventModule} = NativeModules;
+
+
+
 const AssistantScreen = () => {
   // Initialize both states to false
   const [visible, setVisible] = useState(false);
@@ -53,6 +58,7 @@ const AssistantScreen = () => {
     initializeState();
   }, []);
 
+
   // Check state when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
@@ -71,12 +77,25 @@ const AssistantScreen = () => {
       checkState();
     }, []),
   );
+  useEffect(() => {
+    const eventEmitter = new NativeEventEmitter(FloatingButtonEventModule);
+
+    const subscription = eventEmitter.addListener('onCancel', async () => {
+      console.log('User canceled, hiding floating button');
+      setIsEnabled(false);
+      setVisible(false);
+      await FloatingButtonModule.hideBubble();
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   const toggleSwitch = async () => {
     try {
-      const newState = !isEnabled;
+      const newState = !isEnabled; // Perform the actual action before updating local state if (newState) { await FloatingButtonModule.showBubble(); } else { await FloatingButtonModule.hideBubble(); }
+      // const newState = !isEnabled;
 
-      // Perform the actual action before updating local state
+      // // Perform the actual action before updating local state
       if (newState) {
         await FloatingButtonModule.showBubble();
       } else {
@@ -84,32 +103,16 @@ const AssistantScreen = () => {
       }
 
       // Update local state after successful action
-      setIsEnabled(newState);
+      setIsEnabled(!isEnabled);
       // setVisible(newState);
 
       // Show snackbar instead of alert
       setSnackbarMessage(
-        newState
-          ? 'VerifAI Assistant Enabled'
-          : 'VerifAI Assistant Disabled',
+        !isEnabled ? 'VerifAI Assistant Enabled' : 'VerifAI Assistant Disabled',
       );
       setSnackbarVisible(true);
-
-      // Show the alert after action is completed
-      // Alert.alert(
-      //   newState ? 'Assistant Enabled' : 'Assistant Disabled',
-      //   newState
-      //     ? 'The VerifAI assistant will now help you fact-check content.'
-      //     : 'You can re-enable the assistant at any time.',
-      //   [{text: 'OK'}],
-      // );
     } catch (error) {
       console.error('Error toggling floating button:', error);
-      // Alert.alert(
-      //   'Error',
-      //   'Failed to toggle the floating button. Please try again.',
-      //   [{text: 'OK'}],
-      // );
       setSnackbarMessage('Error: Failed to toggle the floating button.');
       setSnackbarVisible(true);
     }

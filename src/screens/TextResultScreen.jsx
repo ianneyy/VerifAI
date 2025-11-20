@@ -72,57 +72,7 @@ const TextResultScreen = () => {
   const placeholderTextColor = theme === 'light' ? '#94a3b8' : '#777777';
   const recognizedTextColor = theme === 'light' ? '#334155' : '#DDDDDD';
 
-  // useEffect(() => {
-  //   const processText = async () => {
-  //     try {
-  //       if (!resultText) {
-  //         return;
-  //       }
-  //       await initDB();
-  //       setLoading(true);
-
-  //       const textResult = await submitText(resultText);
-
-  //       if (textResult) {
-  //         setIsClaim(textResult.isClaim);
-
-  //         console.log(textResult.isClaim);
-  //         if (!textResult.isClaim) {
-  //           setIsModalVisible(true);
-  //         } else {
-  //           setIsModalVisible(false);
-  //           // setContentLoading(false);
-  //           setNews(textResult.matchedArticles);
-  //           setText(textResult.text);
-  //           setPrediction(textResult.prediction);
-  //           setGauge(textResult.score);
-  //           setMatchedArticleScore(textResult.matchedArticleScore);
-  //           const factCheckData = {
-  //             claim: textResult.text,
-  //             verdict: textResult.score,
-  //             writing_style: textResult.prediction,
-  //             method: 'Text Verification',
-  //           };
-
-  //           console.log('📝 Inserting fact check:', factCheckData);
-  //           await insertFactCheck(factCheckData);
-  //           console.log('✅ Fact check inserted.');
-  //         }
-
-  //       } else {
-  //         console.warn('⚠️ No data returned from text processing!');
-  //       }
-  //     } catch (error) {
-  //       console.error('❌ Error processing text:', error);
-  //     } finally {
-  //       setLoading(false);
-  //       // setContentLoading(false);
-  //       // setResultLoading(false);
-  //     }
-  //   };
-  //   processText();
-  // }, [resultText]);
-
+  
   useEffect(() => {
     const processText = async () => {
       try {
@@ -149,7 +99,7 @@ const TextResultScreen = () => {
               setText(textResult.text);
               setPrediction(textResult.prediction);
               setGauge(textResult.score);
-              setMatchedArticleScore(textResult.score);
+              setMatchedArticleScore(textResult.matched_article_score);
 
               const factCheckData = {
                 claim: textResult.text,
@@ -219,12 +169,7 @@ const TextResultScreen = () => {
             {/*EXTRACTED TEXT */}
 
             <View style={styles.claimSection}>
-              <View style={styles.claimHeader}>
-                <Icon name="file-text" size={20} color={accentColor} />
-                <Text style={[styles.claimHeaderText, {color: textColor}]}>
-                  Claim Being Verified
-                </Text>
-              </View>
+              
 
               <View
                 style={[

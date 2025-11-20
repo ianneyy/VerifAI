@@ -37,14 +37,26 @@ const MenuItem = ({ icon, title, description, onPress }) => {
           borderColor: theme === 'light' ? '#e2e8f0' : '#334155',
         },
       ]}
-      onPress={onPress}
-    >
-      <Icon name={icon} size={20}
-      color={theme === 'light' ? '#1e3a8a' : '#6C63FF'}
-      style={styles.menuIcon} />
+      onPress={onPress}>
+      <Icon
+        name={icon}
+        size={20}
+        color={theme === 'light' ? '#6C63FF' : '#6C63FF'}
+        style={styles.menuIcon}
+      />
       <View style={styles.menuTextContainer}>
-        <Text style={[styles.menuTitle, { color: theme === 'light' ? '#0f172a' : '#f8fafc' }]}>{title}</Text>
-        <Text style={[styles.menuDescription, { color: theme === 'light' ? '#64748b' : '#94a3b8' }]}>
+        <Text
+          style={[
+            styles.menuTitle,
+            {color: theme === 'light' ? '#0f172a' : '#f8fafc'},
+          ]}>
+          {title}
+        </Text>
+        <Text
+          style={[
+            styles.menuDescription,
+            {color: theme === 'light' ? '#64748b' : '#94a3b8'},
+          ]}>
           {description}
         </Text>
       </View>
@@ -86,7 +98,7 @@ const HomeScreen = () => {
               style={[
                 styles.title,
                 {
-                  color: theme === 'light' ? '#1e3a8a' : '#6C63FF', // light blue when dark
+                  color: theme === 'light' ? '#6C63FF' : '#6C63FF', // light blue when dark
                 },
               ]}>
               VerifAI
@@ -102,7 +114,7 @@ const HomeScreen = () => {
               <Icon
                 name="check-circle"
                 size={48}
-                color={theme === 'light' ? '#1e3a8a' : '#6C63FF'}
+                color={theme === 'light' ? '#6C63FF' : '#6C63FF'}
               />
             </View>
             <Text

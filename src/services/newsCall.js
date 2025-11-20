@@ -1,29 +1,24 @@
 /* eslint-disable no-undef */
 // const SERVER_URL = 'http://192.168.215.193:5001';
-const SERVER_URL = 'http://10.121.34.193:5001';
-  // const SERVER_URL = 'https://ovx7-verifai.hf.space';
-  const TEXT_URL = 'https://verifai-text-service.onrender.com';
-const IMAGE_URL = 'https://ovx7-image-service.hf.space';
-import {Platform} from 'react-native';
-import DeviceInfo from 'react-native-device-info';
-import EventSource from 'react-native-sse';
-// const getServerUrl = async () => {
-//   const isEmulator = await DeviceInfo.isEmulator();
+// const SERVER_URL = 'http://10.121.34.193:5001';
+const SERVER_URL = 'https://ovx7-verifai.hf.space';
+//   const TEXT_URL = 'https://verifai-text-service.onrender.com';
+// const IMAGE_URL = 'https://ovx7-image-service.hf.space';
 
-//   if (Platform.OS === 'android' && isEmulator) {
-//     return 'http://10.0.2.2:5001';
-//   } else {
-//     return 'http://192.168.1.7:5001'; // <-- your laptop's real IP address
-//   }
-// };
+import EventSource from 'react-native-sse';
 
 // const SERVER_URL = 'http://10.0.2.2:5001';
-export const submitTextWithProgress = async (text, onProgress, onComplete, onError) => {
+export const submitTextWithProgress = async (
+  text,
+  onProgress,
+  onComplete,
+  onError,
+) => {
   const url = `${SERVER_URL}/text`;
   const es = new EventSource(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text}),
   });
 
   es.addEventListener('message', event => {
@@ -95,7 +90,6 @@ export const submitTextWithProgress = async (text, onProgress, onComplete, onErr
 //   }
 // };
 
-
 // export const submitUrl = async url => {
 //   // const SERVER_URL = await getServerUrl();
 
@@ -110,8 +104,7 @@ export const submitTextWithProgress = async (text, onProgress, onComplete, onErr
 
 //     const data = await response.json();
 //     console.log('Response from Flask API:', data);
-   
-  
+
 //     return {
 //       sourceName: data.source_name || '',
 //       title: data.title || '',
@@ -129,7 +122,7 @@ export const submitTextWithProgress = async (text, onProgress, onComplete, onErr
 //       sourceScore: data.source_score || 0,
 //       matchedArticleScore: data.total_ave_rounded || 0,
 //     };
-    
+
 //   } catch (error) {
 //     throw error;
 //   }
@@ -166,9 +159,6 @@ export const submitUrlWithProgress = (url, onProgress, onComplete, onError) => {
     onError && onError(err);
   }
 };
-
-
-
 
 export const uploadImageWithProgress = (
   imageUri,

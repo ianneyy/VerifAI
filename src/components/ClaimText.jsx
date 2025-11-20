@@ -20,10 +20,14 @@ const ClaimText = ({
   return (
     <View style={styles.textContainer}>
       <Text
-        style={[styles.sectionTitle, {color: textColor}, style]}
+        style={[
+          styles.sectionTitle,
+          {color: textColor, fontStyle: 'italic'},
+          style,
+        ]}
         numberOfLines={numberOfLines}
         ellipsizeMode={ellipsizeMode}>
-        {cleanText || 'No text extracted yet.'}
+        "{cleanText || 'No text extracted yet.'}"
       </Text>
     </View>
   );

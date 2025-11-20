@@ -18,6 +18,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.app.ActivityCompat
 import android.content.pm.PackageManager
 import com.zoontek.rnbootsplash.RNBootSplash
+import android.os.Handler
+import android.os.Looper
 
 
 class MainActivity : ReactActivity() {
@@ -41,16 +43,20 @@ class MainActivity : ReactActivity() {
             }
         }
 
-        // Check overlay permission first
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            Log.d("MainActivity", "Requesting overlay permission...")
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-            Toast.makeText(this, "Please grant overlay permission", Toast.LENGTH_LONG).show()
-            overlayPermissionLauncher.launch(intent)
-        }
+        // Defer overlay permission request to avoid blocking app initialization
+        // Post to the main thread handler to run after the app has loaded
+        Handler(Looper.getMainLooper()).postDelayed({
+            // Check overlay permission after app has initialized
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                Log.d("MainActivity", "Requesting overlay permission...")
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                Toast.makeText(this, "Please grant overlay permission", Toast.LENGTH_LONG).show()
+                overlayPermissionLauncher.launch(intent)
+            }
+        }, 1000) // Wait 1 second after app loads
     }
 
     override fun getMainComponentName(): String = "verifai"

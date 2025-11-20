@@ -16,6 +16,7 @@ import { useColorScheme } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import UrlResultScreen from './src/screens/UrlResultScreen';
+import NoInternetScreen from './src/screens/NoInternetScreen';
 import BootSplash from "react-native-bootsplash";
 
 // const ResultScreen = () => null;
@@ -38,13 +39,27 @@ const Stack = createNativeStackNavigator();
 function App() {
   useEffect(() => {
     const init = async () => {
-      // …do multiple sync or async tasks
+      // Wait for React Native bridge to be fully initialized
+      // This ensures the app is ready before hiding splash screen
+      return new Promise((resolve) => {
+        // Use requestAnimationFrame to ensure the UI is ready
+        requestAnimationFrame(() => {
+          // Add a small delay to ensure everything is initialized
+          setTimeout(resolve, 100);
+        });
+      });
     };
 
-    init().finally(async () => {
-      await BootSplash.hide({ fade: true });
-      console.log("BootSplash has been hidden successfully");
-    });
+    init()
+      .then(async () => {
+        await BootSplash.hide({ fade: true });
+        console.log("BootSplash has been hidden successfully");
+      })
+      .catch((error) => {
+        console.error("Error during initialization:", error);
+        // Still try to hide splash even if there's an error
+        BootSplash.hide({ fade: true }).catch(console.error);
+      });
   }, []);
   return (
     <ThemeProvider>
@@ -63,6 +78,7 @@ function App() {
           <Stack.Screen name="ResultScreen" component={ResultScreen} />
           <Stack.Screen name="TextResultScreen" component={TextResultScreen} />
           <Stack.Screen name="UrlResultScreen" component={UrlResultScreen} />
+          <Stack.Screen name="NoInternetScreen" component={NoInternetScreen} />
           <Stack.Screen name="History" component={History} />
         </Stack.Navigator>
       </NavigationContainer>

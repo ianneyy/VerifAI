@@ -17,10 +17,13 @@ import android.content.IntentFilter
 import android.app.Activity
 import com.facebook.react.bridge.ActivityEventListener
 import android.media.projection.MediaProjectionManager
+import com.facebook.react.modules.core.DeviceEventManagerModule
+
 
 class FloatingButtonServiceModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), ActivityEventListener {
     private var mediaProjectionManager: MediaProjectionManager? = null
     private var pendingShowBubble = false
+
 
     init {
         reactContext.addActivityEventListener(this)
@@ -177,6 +180,10 @@ class FloatingButtonServiceModule(reactContext: ReactApplicationContext) : React
                 Log.e("FloatingButtonServiceModule", "Media projection permission denied")
                 Toast.makeText(reactApplicationContext, "Screen capture permission denied", Toast.LENGTH_SHORT).show()
                 pendingShowBubble = false
+                
+                reactApplicationContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                    .emit("onCancel", null)
             }
         }
     }
@@ -187,5 +194,10 @@ class FloatingButtonServiceModule(reactContext: ReactApplicationContext) : React
 
     companion object {
         private const val MEDIA_PROJECTION_REQUEST_CODE = 1000
+    }
+    fun sendCancelEvent() {
+        reactApplicationContext
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit("onCancel", null)
     }
 }

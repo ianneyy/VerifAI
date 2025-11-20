@@ -15,7 +15,6 @@ import {
   Alert,
   Button,
   Modal,
-  
 } from 'react-native';
 
 const TextResultsOverview = ({
@@ -273,9 +272,25 @@ const TextResultsOverview = ({
                       numberOfLines={2}>
                       {item.title}
                     </Text>
-                    <Text style={[styles.newsSource, {color: accentColor}]}>
-                      Source: {item.source}
-                    </Text>
+                    <View
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}>
+                      <Text style={[styles.newsSource, {color: accentColor}]}>
+                        Source: {item.source}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.newsSource,
+                          {color: '#22c55e', fontWeight: 'bold'},
+                        ]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail">
+                        Similarity: {item.similarity}%
+                      </Text>
+                    </View>
                     <Text
                       style={[styles.newsSnippet, {color: subtitleColor}]}
                       numberOfLines={3}>

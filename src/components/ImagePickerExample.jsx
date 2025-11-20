@@ -18,6 +18,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import {ThemeContext} from '../../App';
 import InstructionModal from './InstructionModal';
 import {Button} from 'react-native-paper';
+import NetInfo from '@react-native-community/netinfo';
 
 const ImagePickerExample = () => {
   const navigation = useNavigation();
@@ -61,7 +62,14 @@ const ImagePickerExample = () => {
     // Navigate to ResultScreen with the image URI
     // navigation.navigate('ResultScreen', {imageUri: uri});
   };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+
+     const state = await NetInfo.fetch();
+
+     if (!state.isConnected || !state.isInternetReachable) {
+     navigation.navigate('NoInternetScreen', {redirectTo: 'Upload'});
+      return;
+    }
     if (!imageUri) {
       Alert.alert('No image selected', 'Please choose an image first.');
       return;
@@ -80,7 +88,7 @@ const ImagePickerExample = () => {
       <View style={[styles.header, {borderBottomColor: borderColor}]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}>
+          onPress={() => navigation.navigate('Home')}>
           <Icon name="arrow-left" size={24} color={textColor} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: textColor}]}>

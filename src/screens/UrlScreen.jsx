@@ -16,6 +16,11 @@ import {
 import {ThemeContext} from '../../App';
 import {useNavigation} from '@react-navigation/native';
 import {Button, TextInput} from 'react-native-paper';
+import NetInfo from '@react-native-community/netinfo';
+
+
+
+
 const UrlScreen = () => {
   const {theme} = useContext(ThemeContext);
   const navigation = useNavigation();
@@ -28,7 +33,17 @@ const UrlScreen = () => {
   const borderColor = theme === 'light' ? '#e2e8f0' : '#334155';
 
   const submit = async () => {
+
+
     try {
+       const state = await NetInfo.fetch();
+
+       if (!state.isConnected || !state.isInternetReachable) {
+         navigation.navigate('NoInternetScreen', {redirectTo: 'Url'});
+         return;
+       }
+
+
       const urlPattern =
         /^(https?:\/\/)([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
       if (!urlPattern.test(newsText)) {
