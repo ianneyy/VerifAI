@@ -128,7 +128,16 @@ const ResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  +{sourceScore}%
+                  {sourceScore}%
+                  <Text
+                    style={{
+                      color: '#A1A1A1',
+                      fontWeight: 'normal',
+                      fontSize: 10,
+                    }}>
+                    {' '}
+                    out of 72%
+                  </Text>
                 </Text>
               </View>
               <Text
@@ -196,7 +205,16 @@ const ResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {prediction === 'Credible' ? '+19%' : '+0%'}
+                  {prediction === 'Credible' ? '19%' : '0%'}
+                  <Text
+                    style={{
+                      color: '#A1A1A1',
+                      fontWeight: 'normal',
+                      fontSize: 10,
+                    }}>
+                    {' '}
+                    out of 19%
+                  </Text>
                 </Text>
               </View>
               <Text
@@ -348,8 +366,17 @@ const ResultsOverview = ({
                   ]}>
                   {faceRecognition.trim().toLowerCase() ===
                     'no face detected' || matchedPerson
-                    ? '+9%'
-                    : '+0%'}
+                    ? '9%'
+                    : '0%'}
+                  <Text
+                    style={{
+                      color: '#A1A1A1',
+                      fontWeight: 'normal',
+                      fontSize: 10,
+                    }}>
+                    {' '}
+                    out of 9%
+                  </Text>
                 </Text>
               </View>
               <Text

@@ -5,6 +5,7 @@ import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
 import {submitTextWithProgress} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import TextAccordion from '../components/TextAccordion';
 
 import {
   View,
@@ -169,8 +170,6 @@ const TextResultScreen = () => {
             {/*EXTRACTED TEXT */}
 
             <View style={styles.claimSection}>
-              
-
               <View
                 style={[
                   styles.claimContainer,
@@ -227,6 +226,9 @@ const TextResultScreen = () => {
               reason1={issueModalReason1}
               reason2={issueModalReason2}
             />
+            <View style={{flex: 1, justifyContent: 'flex-end', width: '100%'}}>
+              <TextAccordion />
+            </View>
           </>
         )}
       </ScrollView>

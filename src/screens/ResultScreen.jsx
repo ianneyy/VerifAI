@@ -6,6 +6,7 @@ import {ThemeContext} from '../../App';
 import {uploadImageWithProgress} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import SQLite from 'react-native-sqlite-storage';
+import Accordion from '../components/Accordion';
 
 import {
   View,
@@ -226,6 +227,9 @@ const ResultScreen = () => {
               reason1={issueModalReason1}
               reason2={issueModalReason2}
             />
+            <View style={{flex: 1, justifyContent: 'flex-end', width: '100%'}}>
+              <Accordion />
+            </View>
           </>
         )}
       </ScrollView>

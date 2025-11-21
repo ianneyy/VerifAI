@@ -834,20 +834,20 @@ private fun sendImageToServer(bitmap: Bitmap) {
 
                                         // Update scores
                                         popupView?.findViewById<TextView>(R.id.source_credibility_score)?.apply {
-                                            text = "+$sourceScore%"
-                                            setTextColor(Color.parseColor(if (sourceScore >= 1) "#9DFFBA" else "#FF797B"))
+                                            text = "$sourceScore%"
+                                            setTextColor(Color.parseColor(if (sourceScore >= 1) "#4CD964" else "#FF797B"))
                                         }
 
-                                        val predictionScore = if (prediction == "Credible") "+19" else "+0"
+                                        val predictionScore = if (prediction == "Credible") "19" else "0"
                                         popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.apply {
                                             text = predictionScore
-                                            setTextColor(Color.parseColor(if (predictionScore == "+19") "#9DFFBA" else "#FF797B"))
+                                            setTextColor(Color.parseColor(if (predictionScore == "19") "#4CD964" else "#FF797B"))
                                         }
 
-                                        val matchedPersonScore = if (matchPerson || artist == "No face detected") "+9" else "+0"
+                                        val matchedPersonScore = if (matchPerson || artist == "No face detected") "9" else "0"
                                         popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.apply {
                                             text = matchedPersonScore
-                                            setTextColor(Color.parseColor(if (matchedPersonScore == "+9") "#9DFFBA" else "#FF797B"))
+                                            setTextColor(Color.parseColor(if (matchedPersonScore == "9") "#4CD964" else "#FF797B"))
                                         }
 
                                         // Update content

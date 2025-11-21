@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Alert,
   StatusBar,
+  ScrollView,
   // TextInput,
   Image,
   Modal,
@@ -18,7 +19,7 @@ import {useNavigation} from '@react-navigation/native';
 import {Button, TextInput} from 'react-native-paper';
 import NetInfo from '@react-native-community/netinfo';
 
-
+import Accordion from './Accordion';
 const TextScreen = () => {
   const {theme} = useContext(ThemeContext);
   const navigation = useNavigation();
@@ -84,37 +85,38 @@ const TextScreen = () => {
         barStyle={theme === 'light' ? 'dark-content' : 'light-content'}
         backgroundColor={backgroundColor}
       />
-
-      <View style={[styles.header, {borderBottomColor: borderColor}]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('Home')}>
-          <Icon name="arrow-left" size={24} color={textColor} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, {color: textColor}]}>
-          VerifAI Text
-        </Text>
-        <TouchableOpacity
-          style={styles.helpButton}
-          onPress={() =>
-            Alert.alert(
-              'About Text Verification',
-              'The VerifAI Image Scan helps you verify information by extracting text from uploaded image providing hassle-free verification',
-              [{text: 'Got it'}],
-            )
-          }>
-          <Icon name="help-circle" size={24} color={textColor} />
-        </TouchableOpacity>
-      </View>
-      <View style={{alignItems: 'center', flex: 1}}>
-        <View>
-          {/* <TextSearch color="#94a3b8" size={98} style={{marginBottom: 36}} /> */}
-          <Image
-            source={require('../assets/images/illustrations/text.png')}
-            style={styles.image}
-          />
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'space-between'}}>
+        <View style={[styles.header, {borderBottomColor: borderColor}]}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate('Home')}>
+            <Icon name="arrow-left" size={24} color={textColor} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, {color: textColor}]}>
+            VerifAI Text
+          </Text>
+          <TouchableOpacity
+            style={styles.helpButton}
+            onPress={() =>
+              Alert.alert(
+                'About Text Verification',
+                'The VerifAI Image Scan helps you verify information by extracting text from uploaded image providing hassle-free verification',
+                [{text: 'Got it'}],
+              )
+            }>
+            <Icon name="help-circle" size={24} color={textColor} />
+          </TouchableOpacity>
         </View>
-        {/* <TextInput
+        <View style={{alignItems: 'center', flex: 1}}>
+          <View>
+            {/* <TextSearch color="#94a3b8" size={98} style={{marginBottom: 36}} /> */}
+            <Image
+              source={require('../assets/images/illustrations/text.png')}
+              style={styles.image}
+            />
+          </View>
+          {/* <TextInput
           style={[
             styles.input,
             {
@@ -131,84 +133,88 @@ const TextScreen = () => {
           value={newsText}
           onChangeText={setNewsText}
         /> */}
-        <TextInput
-          mode="outlined"
-          label="Text Input"
-          value={newsText}
-          onChangeText={setNewsText}
-          multiline
-          placeholder="Write or paste your text here"
-          activeOutlineColor="#6C63FF" // color when focused
-          textColor={textColor}
-          style={{
-            backgroundColor: backgroundColor,
-            width: '90%',
-            alignSelf: 'center',
-            marginBottom: 12,
-            paddingVertical: 0,
-          }}
-          contentStyle={{
-            textAlignVertical: 'center', // Move this here
-          }}
-          left={<TextInput.Icon icon="text" />}
-          theme={{
-            roundness: 12,
-            colors: {
-              placeholder: mutedTextColor,
-            },
-            fonts: {
-              bodyLarge: {
-                fontSize: 14, // adjust placeholder text size
+          <TextInput
+            mode="outlined"
+            label="Text Input"
+            value={newsText}
+            onChangeText={setNewsText}
+            multiline
+            placeholder="Write or paste your text here"
+            activeOutlineColor="#6C63FF" // color when focused
+            textColor={textColor}
+            style={{
+              backgroundColor: backgroundColor,
+              width: '90%',
+              alignSelf: 'center',
+              marginBottom: 12,
+              paddingVertical: 0,
+            }}
+            contentStyle={{
+              textAlignVertical: 'center', // Move this here
+            }}
+            left={<TextInput.Icon icon="text" />}
+            theme={{
+              roundness: 12,
+              colors: {
+                placeholder: mutedTextColor,
               },
-            },
-          }}
-        />
-        <Button
-          mode="contained"
-          onPress={submit}
-          style={{
-            backgroundColor: accentColor,
-            width: '90%',
-            alignSelf: 'center',
-            elevation: 0,
-            paddingVertical: 3,
-            borderRadius: 50,
-          }}
-          labelStyle={styles.buttonText}>
-          Verify
-        </Button>
-      </View>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={invalidTextModalVisible}
-        onRequestClose={() => setInvalidTextModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, {backgroundColor}]}>
-            <Text style={[styles.modalTitle, {color: textColor}]}>
-              Invalid Text
-            </Text>
-            <Text style={[styles.modalMessage, {color: mutedTextColor}]}>
-              Please enter a valid sentence. Avoid random characters or
-              gibberish.
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.modalButton,
-                {
-                  backgroundColor: '#6C63FF',
-                  width: '100%',
-                  alignSelf: 'center',
-                  justifyContent: 'center', // ✅ centers vertically
-                  alignItems: 'center',
+              fonts: {
+                bodyLarge: {
+                  fontSize: 14, // adjust placeholder text size
                 },
-              ]}
-              onPress={() => setInvalidTextModalVisible(false)}>
-              <Text style={styles.modalButtonText}>Got it</Text>
-            </TouchableOpacity>
-          </View>
+              },
+            }}
+          />
+          <Button
+            mode="contained"
+            onPress={submit}
+            style={{
+              backgroundColor: accentColor,
+              width: '90%',
+              alignSelf: 'center',
+              elevation: 0,
+              paddingVertical: 3,
+              borderRadius: 50,
+            }}
+            labelStyle={styles.buttonText}>
+            Verify
+          </Button>
         </View>
-      </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={invalidTextModalVisible}
+          onRequestClose={() => setInvalidTextModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContainer, {backgroundColor}]}>
+              <Text style={[styles.modalTitle, {color: textColor}]}>
+                Invalid Text
+              </Text>
+              <Text style={[styles.modalMessage, {color: mutedTextColor}]}>
+                Please enter a valid sentence. Avoid random characters or
+                gibberish.
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  {
+                    backgroundColor: '#6C63FF',
+                    width: '100%',
+                    alignSelf: 'center',
+                    justifyContent: 'center', // ✅ centers vertically
+                    alignItems: 'center',
+                  },
+                ]}
+                onPress={() => setInvalidTextModalVisible(false)}>
+                <Text style={styles.modalButtonText}>Got it</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        {/* <View style={{flex: 1, justifyContent: 'flex-end', width: '100%'}}>
+          <Accordion />
+        </View> */}
+      </ScrollView>
     </SafeAreaView>
   );
 };

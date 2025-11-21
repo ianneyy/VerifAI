@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext} from 'react';
 import {
   Modal,
   View,
@@ -11,9 +11,23 @@ import {
   Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import {ThemeContext} from '../../App';
 
 
 const ImageUploadHelp = ({visible, onClose}) =>{
+
+      const {theme} = useContext(ThemeContext);
+  
+      const darkBackground = '#0f172a';
+      const darkCardBackground = '#090e1a';
+      const darkBorderColor = '#334155';
+      const darkTextColor = '#f8fafc';
+      const darkSubtitleColor = '#AAAAAA';
+      const accentColor = '#6C63FF';
+  
+      // Get the appropriate colors based on the theme
+      const backgroundColor = theme === 'light' ? '#f8fafc' : darkBackground;
+    const textColor = theme === 'light' ? '#0f172a' : darkTextColor;
 
   // Verification levels with descriptions
  const verificationLevels = {
@@ -39,14 +53,14 @@ const ImageUploadHelp = ({visible, onClose}) =>{
     range: '60-74',
   },
   40: {
-    label: 'Proceed with Caution',
+    label: 'Questionnable',
     color: '#fb923c', // Orange
     description:
       'Contains multiple questionable elements or factual inconsistencies that undermine reliability.',
     range: '40-59',
   },
   0: {
-    label: 'Proceed with Maximum Caution',
+    label: 'Likely Fake',
     color: '#FF3B30', // Red
     description:
       'Confirmed false, misleading, or shows severe disregard for credibility standards.',
@@ -64,28 +78,28 @@ const ImageUploadHelp = ({visible, onClose}) =>{
         animationType="slide"
         onRequestClose={onClose}>
         <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, {backgroundColor}]}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, {textColor}]}>
                 Verification Levels Explained
               </Text>
               <TouchableOpacity onPress={onClose}>
-                <Icon name="x" size={24} color="#fff" />
+                <Icon name="x" size={24} color={textColor} />
               </TouchableOpacity>
             </View>
 
             {/* Modal Body */}
             <ScrollView style={styles.modalBody}>
-              {Object.entries(verificationLevels).reverse().map(
-                ([level, {label, color, description, range}]) => (
+              {Object.entries(verificationLevels)
+                .reverse()
+                .map(([level, {label, color, description, range}]) => (
                   <View
                     key={level}
                     style={[
                       styles.levelContainer,
                       {backgroundColor: `${color}20`}, // Using opacity for background
                     ]}>
-                    
                     <View style={styles.levelInfo}>
                       <Text style={[styles.levelTitle, {color}]}>
                         {range}% - {label}
@@ -93,8 +107,7 @@ const ImageUploadHelp = ({visible, onClose}) =>{
                       <Text style={styles.levelDescription}>{description}</Text>
                     </View>
                   </View>
-                ),
-              )}
+                ))}
             </ScrollView>
           </View>
         </SafeAreaView>
@@ -118,7 +131,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: '#0f172a',
+ 
     borderRadius: 12,
     overflow: 'hidden',
     paddingBottom: 16,
@@ -145,7 +158,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+
   },
   modalBody: {
     padding: 16,
@@ -175,6 +188,6 @@ const styles = StyleSheet.create({
   },
   levelDescription: {
     fontSize: 14,
-    color: '#d4d4d4',
+    color: '#666',
   },
 });

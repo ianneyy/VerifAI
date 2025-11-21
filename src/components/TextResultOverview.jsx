@@ -124,7 +124,16 @@ const TextResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {prediction === 'Credible' ? '+10%' : '+0%'}
+                  {prediction === 'Credible' ? '10%' : '0%'}
+                  <Text
+                    style={{
+                      color: '#A1A1A1',
+                      fontWeight: 'normal',
+                      fontSize: 10,
+                    }}>
+                    {' '}
+                    out of 10%
+                  </Text>
                 </Text>
               </View>
               <Text
@@ -194,8 +203,16 @@ const TextResultsOverview = ({
                       fontWeight: 'bold',
                     },
                   ]}>
-                  {/* {articleCount || 0} matching {articleCount === 1 || articleCount === 0 ? 'article' : 'articles'} */}
-                  +{matchedArticleScore >= 1 ? matchedArticleScore : '0'}%
+                  {matchedArticleScore >= 1 ? matchedArticleScore : '0'}%
+                  <Text
+                    style={{
+                      color: '#A1A1A1',
+                      fontWeight: 'normal',
+                      fontSize: 10,
+                    }}>
+                    {' '}
+                    out of 90%
+                  </Text>
                 </Text>
               </View>
               <Text

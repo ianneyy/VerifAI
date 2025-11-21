@@ -5,6 +5,7 @@ import React, {useState, useContext, useEffect} from 'react';
 import {ThemeContext} from '../../App';
 import {submitUrlWithProgress} from '../services/newsCall';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import Accordion from '../components/Accordion';
 import VerifyProgress from '../components/TextLoading';
 
 import {
@@ -254,18 +255,18 @@ useEffect(() => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading ? (
           <View
-                     style={{
-                       marginTop: 200,
-                       justifyContent: 'center',
-                       alignItems: 'center',
-                     }}>
-                     <VerifyProgress
-                       message={message}
-                       progress={progress}
-                       textColor={textColor}
-                       subtitleColor={subtitleColor}
-                     />
-                   </View>
+            style={{
+              marginTop: 200,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <VerifyProgress
+              message={message}
+              progress={progress}
+              textColor={textColor}
+              subtitleColor={subtitleColor}
+            />
+          </View>
         ) : (
           <>
             {/* Preview URL*/}
@@ -353,6 +354,9 @@ useEffect(() => {
               reason1={issueModalReason1}
               reason2={issueModalReason2}
             />
+            <View style={{flex: 1, justifyContent: 'flex-end', width: '100%'}}>
+              <Accordion />
+            </View>
           </>
         )}
       </ScrollView>
