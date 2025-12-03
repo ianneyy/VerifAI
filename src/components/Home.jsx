@@ -2,14 +2,14 @@
 'use client';
 
 import {useContext, useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, BackHandler } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 // Import the ThemeContext from App.tsx
 import { ThemeContext } from '../../App';
 import InstructionModal from './InstructionModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { Button } from 'react-native-paper';
 // Mode toggle component
 const ModeToggle = () => {
   const { theme, toggleTheme } = useContext(ThemeContext);
@@ -67,24 +67,36 @@ const MenuItem = ({ icon, title, description, onPress }) => {
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { theme } = useContext(ThemeContext);
+  const [privacyVisible, setPrivacyVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
- useEffect(() => {
-   const checkFirstLaunch = async () => {
-     try {
-       const hasLaunched = await AsyncStorage.getItem('hasLaunchedBefore');
+useEffect(() => {
+  const checkFlags = async () => {
+    try {
+      const privacyAccepted = await AsyncStorage.getItem('privacyAccepted');
+      if (!privacyAccepted) setPrivacyVisible(true);
 
-       if (!hasLaunched) {
-         // First time the app is opened
-         setModalVisible(true);
-         await AsyncStorage.setItem('hasLaunchedBefore', 'true');
-       }
-     } catch (error) {
-       console.log('Error checking first launch:', error);
-     }
-   };
+      const hasLaunched = await AsyncStorage.getItem('hasLaunchedBefore');
+      if (!hasLaunched) {
+        setModalVisible(true);
+        await AsyncStorage.setItem('hasLaunchedBefore', 'true');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  checkFlags();
+}, []);
 
-   checkFirstLaunch();
- }, []);
+const acceptPrivacy = async () => {
+  try {
+    await AsyncStorage.setItem('privacyAccepted', 'true');
+    setPrivacyVisible(false);
+  } catch (error) {
+    console.log('Error saving privacy acceptance:', error);
+  }
+};
+
+ 
   return (
     <SafeAreaView
       style={[
@@ -176,6 +188,153 @@ const HomeScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+     <Modal
+  visible={privacyVisible}
+  animationType="slide"
+  transparent={true}
+>
+  <View style={{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  }}>
+    <View style={{
+      backgroundColor: theme === 'light' ? '#fff' : '#1e293b',
+      borderRadius: 12,
+      maxHeight: '80%',
+      width: '100%',
+      padding: 16,
+    }}>
+      <ScrollView>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          Privacy Notice
+        </Text>
+
+      
+
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          VerifAI (“we”, “our”, “the system”) is a mobile fact-checking assistant that analyzes text, screenshots, and online content to help users detect misinformation. This Privacy Notice explains how we collect, use, store, and protect your data.
+        </Text>
+
+        {/* 1. Data We Collect */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          1. Data We Collect
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          VerifAI may temporarily process:
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          • Screenshots or images submitted for fact-checking{"\n"}
+          • Text extracted using OCR{"\n"}
+          • Page names or post details detected in screenshots{"\n"}
+          • Source credibility information{"\n"}
+          • App usage information (local only)
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16, fontStyle: 'italic' }}>
+          Important: All processed data is temporary and automatically removed after analysis unless stored locally in your device’s history.
+        </Text>
+
+        {/* 2. Local Storage Only */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          2. Local Storage Only
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          VerifAI does not upload your data to any cloud server. The only data saved is your fact-checking history, stored locally on your device. You may delete your entire history anytime inside the app. No screenshots or personal information are stored on any remote server.
+        </Text>
+
+        {/* 3. How We Use Your Data */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          3. How We Use Your Data
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          • Analyze screenshots and detect possible misinformation{"\n"}
+          • Detect credentials of pages (e.g., verified badges){"\n"}
+          • Provide fact-checking results{"\n"}
+          • Improve app functionality (local-only){"\n"}
+          We do not sell, share, or use your data for advertising.
+        </Text>
+
+        {/* 4. Data Retention */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          4. Data Retention
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          • Temporary data (screenshots, OCR text) is deleted immediately after analysis{"\n"}
+          • Your local history remains only on your device until you manually delete it
+        </Text>
+
+        {/* 5. Data Sharing */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          5. Data Sharing
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          We do not share your data with advertisers, third-party analytics services, or external servers. Data stays completely inside your device.
+        </Text>
+
+        {/* 6. Your Rights */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 8 }}>
+          6. Your Rights
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          • Delete your local history{"\n"}
+          • Stop using the app anytime{"\n"}
+          • Refuse permissions (which may limit app features){"\n"}
+          No personal data is stored remotely, so no deletion request to servers is needed.
+        </Text>
+
+        {/* 7. Security Measures */}
+        <Text style={{ fontWeight: 'bold', color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          7. Security Measures
+        </Text>
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          • No remote database or cloud storage is used{"\n"}
+          • All processing happens locally or temporarily{"\n"}
+          • No facial recognition data or biometrics are stored{"\n"}
+          • History is kept only within the app local storage
+        </Text>
+
+       
+
+        <Text style={{ color: theme === 'light' ? '#0f172a' : '#f8fafc', marginBottom: 16 }}>
+          By using VerifAI, you agree to this Privacy Notice and understand that all data stays on your device unless you choose to save or delete it.
+        </Text>
+
+      </ScrollView>
+
+     <View
+  style={{
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 12, // works in RN 0.71+
+  }}
+>
+   <Button
+    mode="outlined"
+    onPress={() => BackHandler.exitApp()}
+    style={{ flex: 1, borderRadius: 50, borderColor: theme === 'light' ? '#6C63FF' : '#6C63FF' }}
+    textColor={theme === 'light' ? '#6C63FF' : '#6C63FF'}
+  >
+    Disagree
+  </Button>
+  <Button
+    mode="contained"
+    onPress={acceptPrivacy}
+    style={{ flex: 1, borderRadius: 50, backgroundColor: '#6C63FF' }}
+  >
+    Accept
+  </Button>
+
+ 
+</View>
+
+    </View>
+  </View>
+</Modal>
+
     </SafeAreaView>
   );
 };

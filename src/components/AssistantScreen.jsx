@@ -13,7 +13,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
-
+import EulaModal from './EulaModal';
 import Icon from 'react-native-vector-icons/Feather';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 // Import the ThemeContext from App.tsx
@@ -32,7 +32,7 @@ const AssistantScreen = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-
+const [eulaVisible, setEulaVisible] = useState(false);
   const navigation = useNavigation();
   const {theme} = useContext(ThemeContext);
 
@@ -92,16 +92,21 @@ const AssistantScreen = () => {
 
   const toggleSwitch = async () => {
     try {
-      const newState = !isEnabled; // Perform the actual action before updating local state if (newState) { await FloatingButtonModule.showBubble(); } else { await FloatingButtonModule.hideBubble(); }
-      // const newState = !isEnabled;
+     
 
       // // Perform the actual action before updating local state
-      if (newState) {
-        await FloatingButtonModule.showBubble();
-      } else {
-        await FloatingButtonModule.hideBubble();
-      }
-
+      // if (newState) {
+      //   await FloatingButtonModule.showBubble();
+      // } else {
+      //   await FloatingButtonModule.hideBubble();
+      // }
+         // user is turning ON — show EULA first
+      if (!isEnabled) {
+      // user is turning ON — show EULA first
+      setEulaVisible(true);
+      return;
+    }
+      await FloatingButtonModule.hideBubble();
       // Update local state after successful action
       setIsEnabled(!isEnabled);
       // setVisible(newState);
@@ -118,6 +123,23 @@ const AssistantScreen = () => {
     }
   };
 
+  const handleAgree = async () => {
+  setEulaVisible(false);
+
+  try {
+    await FloatingButtonModule.showBubble();
+    setIsEnabled(true);
+    setSnackbarMessage('VerifAI Assistant Enabled');
+    setSnackbarVisible(true);
+  } catch (error) {
+    console.error('Error enabling assistant:', error);
+  }
+};
+
+const handleCancel = () => {
+  setEulaVisible(false);
+};
+
   // Get the appropriate colors based on the theme
   const backgroundColor = theme === 'light' ? '#f8fafc' : '#0f172a';
   const textColor = theme === 'light' ? '#0f172a' : '#f8fafc';
@@ -128,7 +150,7 @@ const AssistantScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor}]}>
-      <View style={[styles.header, {borderBottomColor: borderColor}]}>
+      <View style={[styles.header, {borderBottomColor: 'transparent'}]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
@@ -252,6 +274,12 @@ const AssistantScreen = () => {
           {snackbarMessage}
         </Snackbar>
       </View>
+      <EulaModal
+  visible={eulaVisible}
+  onAgree={handleAgree}
+  onCancel={handleCancel}
+  theme={theme}
+/>
     </SafeAreaView>
   );
 };

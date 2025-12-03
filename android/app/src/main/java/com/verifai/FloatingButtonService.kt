@@ -525,7 +525,7 @@ class FloatingButtonService : Service() {
         }
     }
 
-    private fun insertData(context: Context, claim: String, source: String, verdict: Int, source_score: Int, writing_style: String, matched_article: Int, matched_person: String, face_recognition: String, created_at: String, method: String) {
+    private fun insertData(context: Context, claim: String, source: String, verdict: Int, source_score: Int, writing_style: String, matched_person: String, face_recognition: String, created_at: String, method: String) {
         val dbPath = context.getDatabasePath("factchecker.db")
 
         val db = SQLiteDatabase.openDatabase(
@@ -539,7 +539,7 @@ class FloatingButtonService : Service() {
             put("verdict", verdict)
             put("source_score", source_score)
             put("writing_style", writing_style)
-            put("matched_article", matched_article)
+           
             put("matched_person", matched_person)
             put("face_recognition", face_recognition)
             put("created_at", created_at)
@@ -579,8 +579,8 @@ class FloatingButtonService : Service() {
             layoutResults?.visibility = View.VISIBLE
             layoutNews?.visibility = View.GONE
             btnResults?.setTextColor(Color.parseColor("#FFFFFF"))
-            btnResults?.setBackgroundColor(Color.parseColor("#2979FF"))
-            btnNews?.setTextColor(Color.parseColor("#2979FF"))
+            btnResults?.setBackgroundColor(Color.parseColor("#6C63FF"))
+            btnNews?.setTextColor(Color.parseColor("#6C63FF"))
             btnNews?.setBackgroundColor(Color.parseColor("#f8fafc"))
 
             // Set up click listeners
@@ -589,10 +589,10 @@ class FloatingButtonService : Service() {
                 layoutNews?.visibility = View.GONE
                                             
                 btnResults?.setTextColor(Color.parseColor("#FFFFFF"))
-                btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#2979FF"))
+                btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#6C63FF"))
 
 
-                btnNews?.setTextColor(Color.parseColor("#2979FF"))
+                btnNews?.setTextColor(Color.parseColor("#6C63FF"))
                 btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#f8fafc"))
 
             }
@@ -602,10 +602,10 @@ class FloatingButtonService : Service() {
                 layoutResults?.visibility = View.GONE
 
                 btnNews?.setTextColor(Color.parseColor("#FFFFFF"))
-                btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#2979FF"))
+                btnNews?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#6C63FF"))
 
                                             
-                btnResults?.setTextColor(Color.parseColor("#2979FF"))
+                btnResults?.setTextColor(Color.parseColor("#6C63FF"))
                 btnResults?.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#f8fafc"))
              }
             // Show loading, hide content initially
@@ -619,9 +619,9 @@ class FloatingButtonService : Service() {
 
         // Set up result fields with default values
             // popupView?.findViewById<TextView>(R.id.matched_article_score)?.text = "+25%"
-            popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "+25%"
-            popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+25%"
-            popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+25%"
+            popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.text = "+19%"
+            popupView?.findViewById<TextView>(R.id.source_credibility_score)?.text = "+72%"
+            popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.text = "+9%"
 
         val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -831,6 +831,8 @@ private fun sendImageToServer(bitmap: Bitmap) {
                                             progress = score
                                             finishedStrokeColor = Color.parseColor(colorLabel)
                                         }
+                                         val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                                        
 
                                         // Update scores
                                         popupView?.findViewById<TextView>(R.id.source_credibility_score)?.apply {
@@ -840,15 +842,16 @@ private fun sendImageToServer(bitmap: Bitmap) {
 
                                         val predictionScore = if (prediction == "Credible") "19" else "0"
                                         popupView?.findViewById<TextView>(R.id.content_authenticity_score)?.apply {
-                                            text = predictionScore
+                                            text = "$predictionScore%"
                                             setTextColor(Color.parseColor(if (predictionScore == "19") "#4CD964" else "#FF797B"))
                                         }
 
                                         val matchedPersonScore = if (matchPerson || artist == "No face detected") "9" else "0"
                                         popupView?.findViewById<TextView>(R.id.face_context_matching_score)?.apply {
-                                            text = matchedPersonScore
+                                            text = "$matchedPersonScore%"
                                             setTextColor(Color.parseColor(if (matchedPersonScore == "9") "#4CD964" else "#FF797B"))
                                         }
+                                         insertData(context, cleanedText, sourceName, score, sourceScore, predictionScore, matchedPersonScore, artist, currentTime, "VerifAI Assistant")
 
                                         // Update content
                                         popupView?.findViewById<TextView>(R.id.content_text)?.text = cleanedText
